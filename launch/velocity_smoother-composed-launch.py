@@ -30,7 +30,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Launch the velodyne pointcloud convert with default configuration."""
+"""Launch the velocity smoother as a composed node with default configuration."""
 
 import os
 
