@@ -80,18 +80,18 @@ private:
   double speed_lim_v_, accel_lim_v_, decel_lim_v_;
   double speed_lim_w_, accel_lim_w_, decel_lim_w_;
 
-  geometry_msgs::msg::Twist  current_vel_;
-  geometry_msgs::msg::Twist   target_vel_;
+  geometry_msgs::msg::Twist current_vel_;
+  geometry_msgs::msg::Twist target_vel_;
   double last_cmd_vel_linear_x_;
   double last_cmd_vel_angular_z_;
 
   double period_;
   double decel_factor_;
-  bool                 input_active_;
-  double                cb_avg_time_;
-  rclcpp::Time            last_velocity_cb_time_;
+  bool input_active_;
+  double cb_avg_time_;
+  rclcpp::Time last_velocity_cb_time_;
   std::vector<double> period_record_; /**< Historic of latest periods between velocity commands */
-  unsigned int             pr_next_; /**< Next position to fill in the periods record buffer */
+  unsigned int pr_next_; /**< Next position to fill in the periods record buffer */
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_sub_;    /**< Current velocity from odometry */
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr current_vel_sub_; /**< Current velocity from commands sent to the robot, not necessarily by this node */

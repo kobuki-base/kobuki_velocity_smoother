@@ -48,7 +48,6 @@ def generate_launch_description():
                                                       parameters=[params_file])
 
     return launch.LaunchDescription([velocity_smoother_node,
-
                                      launch.actions.RegisterEventHandler(
                                          event_handler=launch.event_handlers.OnProcessExit(
                                              target_action=velocity_smoother_node,
