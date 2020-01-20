@@ -7,6 +7,7 @@
   <author>Jorge Santos Simon</author>
   <maintainer email="jihoonl@yujinrobot.com">Jihoon Lee</maintainer>
   <license>BSD</license>
+  <url type="website">https://index.ros.org/v/velocity_smoother/github-kobuki-base-velocity_smoother</url>
   <url type="repository">https://github.com/kobuki-base/velocity_smoother</url>
   <url type="bugtracker">https://github.com/kobuki-base/velocity_smoother/issues</url>
 
