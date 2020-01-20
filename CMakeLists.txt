@@ -1,41 +1,52 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(yocs_velocity_smoother)
-find_package(catkin REQUIRED COMPONENTS roscpp pluginlib nodelet ecl_threads dynamic_reconfigure geometry_msgs nav_msgs)
+cmake_minimum_required(VERSION 3.5)
+project(velocity_smoother)
 
-# Dynamic reconfigure support
-generate_dynamic_reconfigure_options(cfg/params.cfg)
+find_package(ament_cmake_ros REQUIRED)
+find_package(ecl_build REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(rcl_interfaces REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
-catkin_package(
-   INCLUDE_DIRS include
-   LIBRARIES ${PROJECT_NAME}_nodelet
-   CATKIN_DEPENDS roscpp pluginlib nodelet ecl_threads dynamic_reconfigure geometry_msgs nav_msgs
+ecl_enable_cxx14_compiler()
+ecl_enable_cxx_warnings()
+
+include_directories(include)
+
+add_library(${PROJECT_NAME} SHARED src/velocity_smoother.cpp)
+ament_target_dependencies(${PROJECT_NAME}
+  "geometry_msgs"
+  "nav_msgs"
+  "rcl_interfaces"
+  "rclcpp"
+  "rclcpp_components"
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_executable(velocity_smoother_node src/velocity_smoother_node.cpp)
+ament_target_dependencies(velocity_smoother_node
+  "rclcpp"
+)
+target_link_libraries(velocity_smoother_node
+  ${PROJECT_NAME}
+)
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+rclcpp_components_register_nodes(${PROJECT_NAME}
+  "velocity_smoother::VelocitySmoother")
 
-
-# Nodelet library
-add_library(${PROJECT_NAME}_nodelet src/velocity_smoother_nodelet.cpp)
-
-
-target_link_libraries(${PROJECT_NAME}_nodelet ${catkin_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_gencfg)
-
-
-install(TARGETS ${PROJECT_NAME}_nodelet
-        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 install(DIRECTORY include/${PROJECT_NAME}/
-        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  DESTINATION include/${PROJECT_NAME}
 )
-install(DIRECTORY plugins
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(TARGETS velocity_smoother_node
+  DESTINATION lib/${PROJECT_NAME}
 )
-install(DIRECTORY launch
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(DIRECTORY config launch
+  DESTINATION share/${PROJECT_NAME}
 )
-install(DIRECTORY param
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+
+ament_package()
