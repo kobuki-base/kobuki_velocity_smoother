@@ -1,10 +1,14 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package velocity_smoother
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=================
+Velocity Smoother
+=================
 
 Forthcoming
 -----------
-* Refactored for ROS 2 and renamed to velocity_smoother
+* ...
+
+0.13.0 (2020-01-20)
+------------------
+* Refactored for ROS 2 and renamed to velocity_smoother, `#1 <https://github.com/kobuki-base/velocity_smoother/pull/1>`_
 
 0.6.3 (2014-12-05)
 ------------------
