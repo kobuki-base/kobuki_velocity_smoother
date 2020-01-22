@@ -16,7 +16,6 @@ import launch_ros.actions
 
 import yaml
 
-
 def generate_launch_description():
     share_dir = ament_index_python.packages.get_package_share_directory('velocity_smoother')
 

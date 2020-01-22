@@ -8,7 +8,7 @@ $ pytest-3 -s
 # run a single file
 $ pytest-3 -s test_translational_smoothing.py
 # run a single test
-$ pytest-3 -s test_translational_smoothing.py:
+$ pytest-3 -s test_translational_smoothing.py::test_publishing
 # run using setuptools
 $ python3 setup.py test
 ```
