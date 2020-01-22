@@ -10,10 +10,12 @@
 # Imports
 ##############################################################################
 
+import functools
 import os
 import pytest
 import sys
 import unittest
+import typing
 import yaml
 
 import ament_index_python
@@ -22,6 +24,8 @@ import launch.actions
 import launch_ros
 import launch_testing
 import launch_testing.asserts
+
+import geometry_msgs.msg as geometry_msgs
 
 ##############################################################################
 # Helpers
@@ -35,11 +39,6 @@ def create_command_profile_node():
         'test_nodes',
         'translational_command_profile.py'
     )
-#     return launch.actions.ExecuteProcess(
-#         cmd=[sys.executable, script_pathname],
-#         emulate_tty=True,
-#         output='screen'
-#     )
     return launch_ros.actions.Node(
         package='velocity_smoother',
         node_executable='translational_command_profile.py',
@@ -71,8 +70,7 @@ def create_velocity_smoother_node():
         parameters=[params]
     )
 
-# @pytest.mark.launch_test
-@pytest.mark.rostest    
+@pytest.mark.rostest
 def generate_test_description(ready_fn):
     command_profile_node = create_command_profile_node()
     velocity_smoother_node = create_velocity_smoother_node()
@@ -81,7 +79,8 @@ def generate_test_description(ready_fn):
             command_profile_node,
             velocity_smoother_node,
             # Start tests right away - no need to wait for anything
-            launch.actions.OpaqueFunction(function=lambda context: ready_fn()),
+            launch_testing.actions.ReadyToTest(),
+            # launch.actions.OpaqueFunction(function=lambda context: ready_fn()),
         ]),
         {
             'profile': command_profile_node,
@@ -97,10 +96,44 @@ def generate_test_description(ready_fn):
 # After all these tests are done, the launch system will shut
 # down the processes that it started up
 
-class TestGoodProcess(unittest.TestCase):
+class TestCommandProfile(unittest.TestCase):
 
-    def test_wait_for_profile_to_be_sent(self):
-        # This will match stdout from any process.
-        # TODO: lock onto the profiling_process
-        self.proc_output.assertWaitFor("PROFILE_SENT", timeout=30)
+    def test_wait_for_profile_to_be_sent(self, launch_service, profile, proc_output):
+        launch_context = launch_service.context
+        node = launch_context.locals.launch_ros_node
+        node.get_logger().info("Waiting for Profile")
+        proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=profile, timeout=60)
 
+    def test_subscribe_vel_topics(self, launch_service, command_profile_node):
+        launch_context = launch_service.context
+        node = launch_context.locals.launch_ros_node
+        raw_velocities = []
+        raw_timestamps = []
+        smoothed_velocities = []
+        smoothed_timestamps = []
+
+        def append_velocity(
+                velocity_container,  # typing.List[float]
+                timestamps_container,  # typing.List[float]
+                msg  # geometry_msgs.Twist
+        ):
+            velocity_container.append(msg.linear.x)
+            timestamps_container.append(rclpy.clock.Clock.now())
+
+        try:
+            raw_subscriber = node.create_subscription(
+                geometry_msgs.Twist,
+                '/raw_cmd_vel2',
+                functools.partial(append_velocity, raw_velocities, raw_timestamps),
+                10
+            )
+            smoothed_subscriber = node.create_subscription(
+                geometry_msgs.Twist,
+                '/smooth_cmd_vel2',
+                functools.partial(append_velocity, smoothed_velocities, smoothed_timestamps),
+                10
+            )
+        finally:
+            node.get_logger().info("Raw Timestamps: {}".format(raw_timestamps))
+            node.destroy_subscription(raw_subscriber)
+            node.destroy_subscription(smoothed_subscriber)
