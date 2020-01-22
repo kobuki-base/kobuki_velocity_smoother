@@ -77,6 +77,7 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr raw_in_vel_sub_;  /**< Incoming raw velocity commands */
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr  smooth_vel_pub_;  /**< Outgoing smoothed velocity commands */
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_cb_;
 
   void timerCB();
   void velocityCB(const geometry_msgs::msg::Twist::SharedPtr msg);

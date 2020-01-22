@@ -94,6 +94,10 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp
 
   period_ = 1.0 / frequency;
   timer_ = this->create_wall_timer(std::chrono::milliseconds(static_cast<uint64_t>(period_ * 1000.0)), std::bind(&VelocitySmoother::timerCB, this));
+
+  param_cb_ =
+    add_on_set_parameters_callback(std::bind(&VelocitySmoother::parameterUpdate, this,
+      std::placeholders::_1));
 }
 
 VelocitySmoother::~VelocitySmoother()
