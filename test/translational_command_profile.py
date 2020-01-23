@@ -56,7 +56,8 @@ class Command(object):
             x_vel += parameters.ramp_increment
         # RAMP_LEVEL
         count = 0
-        interval_length = len(self.profile)
+        # interval_length = len(self.profile)
+        interval_length = 10
         while count < interval_length:
             self.profile.append(x_vel)
             yield x_vel

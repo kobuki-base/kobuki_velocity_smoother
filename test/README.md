@@ -1,14 +1,8 @@
 # Executing Tests
 
 ```bash
-# run all tests in the current directory
-$ pytest-3
-# run all tests with full stdout (-s / --capture=no)
-$ pytest-3 -s
-# run a single file
-$ pytest-3 -s test_translational_smoothing.py
-# run a single test
-$ pytest-3 -s test_translational_smoothing.py::test_publishing
-# run using setuptools
-$ python3 setup.py test
+INSTALL_DIR=<path_to_install_space>
+$ ros2 test ${INSTALL_DIR}/share/velocity_smoother/launch_tests/test_translational_smoothing.py
 ```
+
+To enable external interaction with it (e.g. via ros2cli), then use the `--disable-isolation` argument.

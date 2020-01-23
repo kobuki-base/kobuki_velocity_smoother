@@ -31,6 +31,30 @@ import geometry_msgs.msg as geometry_msgs
 # Helpers
 ##############################################################################
 
+def qos_profile_latched():
+    """
+    Convenience retrieval for a latched topic (publisher / subscriber)
+    """
+    return rclpy.qos.QoSProfile(
+        history=rclpy.qos.QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+        depth=1,
+        durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+        reliability=rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
+    )
+
+
+def qos_profile_unlatched():
+    """
+    Default profile for an unlatched topic (in py_trees_ros).
+    """
+    return rclpy.qos.QoSProfile(
+        history=rclpy.qos.QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+        depth=1,
+        durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_VOLATILE,
+        reliability=rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
+    )
+
+
 def create_command_profile_node():
     script_pathname = os.path.join(
         ament_index_python.get_package_prefix('velocity_smoother'),
@@ -92,6 +116,9 @@ def generate_test_description(ready_fn):
 # Classes
 ##############################################################################
 
+def foo_callback(msg):
+    print("Got message: {}".format(msg))
+
 # These tests will run concurrently with the profiling process.
 # After all these tests are done, the launch system will shut
 # down the processes that it started up
@@ -120,19 +147,27 @@ class TestCommandProfile(unittest.TestCase):
             velocity_container.append(msg.linear.x)
             timestamps_container.append(rclpy.clock.Clock.now())
 
+        raw_subscriber = node.create_subscription(
+            geometry_msgs.Twist,
+            '/raw_cmd_vel',
+            functools.partial(append_velocity, raw_velocities, raw_timestamps),
+            10
+        )
+        smoothed_subscriber = node.create_subscription(
+            geometry_msgs.Twist,
+            '/smooth_cmd_vel',
+            functools.partial(append_velocity, smoothed_velocities, smoothed_timestamps),
+            10
+        )
+        foo_subscriber = node.create_subscription(
+            geometry_msgs.Twist,
+            '/foo',
+            foo_callback,
+#            qos_profile=qos_profile_unlatched()
+        )
         try:
-            raw_subscriber = node.create_subscription(
-                geometry_msgs.Twist,
-                '/raw_cmd_vel2',
-                functools.partial(append_velocity, raw_velocities, raw_timestamps),
-                10
-            )
-            smoothed_subscriber = node.create_subscription(
-                geometry_msgs.Twist,
-                '/smooth_cmd_vel2',
-                functools.partial(append_velocity, smoothed_velocities, smoothed_timestamps),
-                10
-            )
+            node.get_logger().info("Waiting for Profile")
+            proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=profile, timeout=60)
         finally:
             node.get_logger().info("Raw Timestamps: {}".format(raw_timestamps))
             node.destroy_subscription(raw_subscriber)
