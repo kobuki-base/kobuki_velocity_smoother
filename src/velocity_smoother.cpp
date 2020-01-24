@@ -43,6 +43,7 @@ namespace velocity_smoother {
 
 VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp::Node("velocity_smoother", options)
 , input_active_(false)
+, last_velocity_cb_time_(this->get_clock()->now())
 , pr_next_(0)
 {
   double frequency = this->declare_parameter("frequency", 20.0);
@@ -58,25 +59,37 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp
   robot_feedback = static_cast<RobotFeedbackType>(feedback);
 
   // Mandatory parameters
-  rclcpp::ParameterValue speed_v = this->declare_parameter("speed_lim_v");
+  rclcpp::ParameterValue speed_v = this->declare_parameter(
+      "speed_lim_v",
+      rclcpp::ParameterValue(0.8)
+  );
   if (speed_v.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
     throw std::runtime_error("speed_lim_v must be specified as a double");
   }
   speed_lim_v_ = speed_v.get<double>();
 
-  rclcpp::ParameterValue speed_w = this->declare_parameter("speed_lim_w");
+  rclcpp::ParameterValue speed_w = this->declare_parameter(
+    "speed_lim_w",
+    rclcpp::ParameterValue(5.4)
+  );
   if (speed_w.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
     throw std::runtime_error("speed_lim_w must be specified as a double");
   }
   speed_lim_w_ = speed_w.get<double>();
 
-  rclcpp::ParameterValue accel_v = this->declare_parameter("accel_lim_v");
+  rclcpp::ParameterValue accel_v = this->declare_parameter(
+    "accel_lim_v",
+    rclcpp::ParameterValue(0.3)
+  );
   if (accel_v.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
     throw std::runtime_error("accel_lim_v must be specified as a double");
   }
   accel_lim_v_ = accel_v.get<double>();
 
-  rclcpp::ParameterValue accel_w = this->declare_parameter("accel_lim_w");
+  rclcpp::ParameterValue accel_w = this->declare_parameter(
+    "accel_lim_w",
+    rclcpp::ParameterValue(3.5)
+  );
   if (accel_w.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
     throw std::runtime_error("accel_lim_w must be specified as a double");
   }
