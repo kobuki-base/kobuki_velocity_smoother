@@ -41,7 +41,7 @@ namespace velocity_smoother {
 ** Implementation
 **********************/
 
-VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp::Node("velocity_smoother_node", options)
+VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp::Node("velocity_smoother", options)
 , input_active_(false)
 , pr_next_(0)
 {

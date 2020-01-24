@@ -10,49 +10,37 @@
 # Imports
 ##############################################################################
 
+import matplotlib
+# choose a backend that lets it construct plots off the main thread
+#  https://stackoverflow.com/questions/49921721/runtimeerror-main-thread-is-not-in-main-loop-with-matplotlib-and-flask
+matplotlib.use('Agg')
+
 import functools
+import matplotlib.pyplot as plt
 import os
-import pytest
 import sys
+import time
 import unittest
-import typing
+import uuid
 import yaml
 
 import ament_index_python
 import launch
-import launch.actions
 import launch_ros
-import launch_testing
-import launch_testing.asserts
+import launch_ros.actions
+import launch_testing.actions
+import launch_testing_ros
+import rclpy
+import rclpy.qos
 
-import geometry_msgs.msg as geometry_msgs
+import pytest
+
+import geometry_msgs.msg
+import std_msgs.msg
 
 ##############################################################################
 # Helpers
 ##############################################################################
-
-def qos_profile_latched():
-    """
-    Convenience retrieval for a latched topic (publisher / subscriber)
-    """
-    return rclpy.qos.QoSProfile(
-        history=rclpy.qos.QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-        depth=1,
-        durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
-        reliability=rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
-    )
-
-
-def qos_profile_unlatched():
-    """
-    Default profile for an unlatched topic (in py_trees_ros).
-    """
-    return rclpy.qos.QoSProfile(
-        history=rclpy.qos.QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-        depth=1,
-        durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_VOLATILE,
-        reliability=rclpy.qos.QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE
-    )
 
 
 def create_command_profile_node():
@@ -86,29 +74,56 @@ def create_velocity_smoother_node():
     # composed launch file similar, we use that style here as well.
     params_file = os.path.join(share_dir, 'config', 'velocity_smoother_params.yaml')
     with open(params_file, 'r') as f:
-        params = yaml.safe_load(f)['velocity_smoother_node']['ros__parameters']
+        params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
     return launch_ros.actions.Node(
         package='velocity_smoother',
-        node_executable='velocity_smoother_node',
+        node_executable='velocity_smoother',
+        node_name='velocity_smoother',
         output='both',
         parameters=[params]
     )
 
 @pytest.mark.rostest
-def generate_test_description(ready_fn):
+def generate_test_description():
+    # Normally, talker publishes on the 'chatter' topic and listener listens on the
+    # 'chatter' topic, but we want to show how to use remappings to munge the data so we
+    # will remap these topics when we launch the nodes and insert our own node that can
+    # change the data as it passes through
+    path_to_test = os.path.dirname(__file__)
+
     command_profile_node = create_command_profile_node()
     velocity_smoother_node = create_velocity_smoother_node()
+    talker_node = launch_ros.actions.Node(
+        package='velocity_smoother',
+        node_executable='talker.py',
+        node_name="talker",
+        output='both',
+        emulate_tty=True,
+        remappings=[('chatter', 'talker_chatter')]
+    )
+    listener_node = launch_ros.actions.Node(
+        package='velocity_smoother',
+        node_executable='listener.py',
+        node_name="listener",
+        output='both',
+        emulate_tty=True,
+        remappings=[('chatter', 'listener_chatter')]
+    )
+
     return (
         launch.LaunchDescription([
-            command_profile_node,
-            velocity_smoother_node,
+             command_profile_node,
+             velocity_smoother_node,
+             talker_node,
+             listener_node,
             # Start tests right away - no need to wait for anything
-            launch_testing.actions.ReadyToTest(),
-            # launch.actions.OpaqueFunction(function=lambda context: ready_fn()),
+             launch_testing.actions.ReadyToTest(),
         ]),
         {
-            'profile': command_profile_node,
-            'velocity_smoother': velocity_smoother_node
+            'commands': command_profile_node,
+            'velocity_smoother': velocity_smoother_node,
+            'talker': talker_node,
+            'listener': listener_node,
         }
     )
 
@@ -116,59 +131,52 @@ def generate_test_description(ready_fn):
 # Classes
 ##############################################################################
 
-def foo_callback(msg):
-    print("Got message: {}".format(msg))
-
 # These tests will run concurrently with the profiling process.
 # After all these tests are done, the launch system will shut
 # down the processes that it started up
 
 class TestCommandProfile(unittest.TestCase):
 
-    def test_wait_for_profile_to_be_sent(self, launch_service, profile, proc_output):
+    def test_subscribe_vel_topics(self, launch_service, commands, proc_output):
         launch_context = launch_service.context
         node = launch_context.locals.launch_ros_node
-        node.get_logger().info("Waiting for Profile")
-        proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=profile, timeout=60)
-
-    def test_subscribe_vel_topics(self, launch_service, command_profile_node):
-        launch_context = launch_service.context
-        node = launch_context.locals.launch_ros_node
-        raw_velocities = []
-        raw_timestamps = []
+        input_velocities = []
+        input_timestamps = []
         smoothed_velocities = []
         smoothed_timestamps = []
 
-        def append_velocity(
-                velocity_container,  # typing.List[float]
-                timestamps_container,  # typing.List[float]
-                msg  # geometry_msgs.Twist
-        ):
-            velocity_container.append(msg.linear.x)
-            timestamps_container.append(rclpy.clock.Clock.now())
+        def received_input_data(msg):
+            # node.get_logger().warn("received input data {}".format(msg))
+            input_velocities.append(msg.linear.x)
+            input_timestamps.append(time.monotonic())
 
-        raw_subscriber = node.create_subscription(
-            geometry_msgs.Twist,
-            '/raw_cmd_vel',
-            functools.partial(append_velocity, raw_velocities, raw_timestamps),
-            10
+        def received_smoothed_data(msg):
+            node.get_logger().warn("received smoothed data {}".format(msg))
+            smoothed_velocities.append(msg.linear.x)
+            smoothed_timestamps.append(time.monotonic())            
+            
+        input_subscriber = node.create_subscription(
+            geometry_msgs.msg.Twist,
+            'raw_cmd_vel',
+            received_input_data,
+            10,
         )
         smoothed_subscriber = node.create_subscription(
-            geometry_msgs.Twist,
-            '/smooth_cmd_vel',
-            functools.partial(append_velocity, smoothed_velocities, smoothed_timestamps),
-            10
-        )
-        foo_subscriber = node.create_subscription(
-            geometry_msgs.Twist,
-            '/foo',
-            foo_callback,
-#            qos_profile=qos_profile_unlatched()
+            geometry_msgs.msg.Twist,
+            'smooth_cmd_vel',
+            received_smoothed_data,
+            10,
         )
         try:
-            node.get_logger().info("Waiting for Profile")
-            proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=profile, timeout=60)
+            node.get_logger().info("Waiting for PROFILE_SENT")
+            proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=commands, timeout=60)
         finally:
-            node.get_logger().info("Raw Timestamps: {}".format(raw_timestamps))
-            node.destroy_subscription(raw_subscriber)
+            node.get_logger().info("Raw Timestamps: {}".format(input_timestamps))
+            plt.plot(input_timestamps, input_velocities, label="input")
+            plt.plot(smoothed_timestamps, smoothed_velocities, label="smooth")
+            plt.xlabel('time')
+            plt.ylabel('velocity')
+            plt.title("Raw Input vs Smoothed Velocities")
+            plt.legend()
+            node.destroy_subscription(input_subscriber)
             node.destroy_subscription(smoothed_subscriber)

@@ -27,7 +27,7 @@ def generate_launch_description():
     # and create a dictionary of it that the ComposableNode will accept.
     params_file = os.path.join(share_dir, 'config', 'velocity_smoother_params.yaml')
     with open(params_file, 'r') as f:
-        params = yaml.safe_load(f)['velocity_smoother_node']['ros__parameters']
+        params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
     container = ComposableNodeContainer(
             node_name='velocity_smoother_container',
             node_namespace='',
@@ -37,7 +37,7 @@ def generate_launch_description():
                 ComposableNode(
                     package='velocity_smoother',
                     node_plugin='velocity_smoother::VelocitySmoother',
-                    node_name='velocity_smoother_node',
+                    node_name='velocity_smoother',
                     parameters=[params]),
             ],
             output='both',

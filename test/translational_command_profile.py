@@ -27,9 +27,6 @@ def banner(msg):
     print("* " + msg.center(80))
     print(80 * "*" + "\n")
 
-def qos_profile():
-    return rclpy.qos.qos_profile_sensor_data  # best effort, not latched
-
 ##############################################################################
 # Classes
 ##############################################################################
@@ -123,7 +120,7 @@ class Command(object):
         return cmd_vel, odom
 
 class Publisher(object):
-    def __init__(self, node_name, qos_profile):
+    def __init__(self, node_name):
         self.stopped = False
         self.command = Command()
 
@@ -131,12 +128,12 @@ class Publisher(object):
         self.cmd_vel_publisher = self.node.create_publisher(
             msg_type=geometry_msgs.Twist,
             topic="~/cmd_vel",
-            qos_profile=qos_profile
+            qos_profile=10,
         )
         self.odom_publisher = self.node.create_publisher(
             msg_type=nav_msgs.Odometry,
             topic="~/odom",
-            qos_profile=qos_profile
+            qos_profile=10,
         )
         self.timer = self.node.create_timer(
             timer_period_sec=0.1,
@@ -168,14 +165,10 @@ class Publisher(object):
 
 
 if __name__== "__main__":
-    banner("Translational Profiling")
-
+    banner("Command Profile")
     rclpy.init()
 
-    publisher = Publisher(
-        node_name="publisher",
-        qos_profile=qos_profile()
-    )
+    publisher = Publisher(node_name="publisher")
 
     executor = rclpy.executors.SingleThreadedExecutor()
     executor.add_node(publisher.node)
