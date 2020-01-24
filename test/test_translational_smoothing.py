@@ -151,7 +151,7 @@ class TestCommandProfile(unittest.TestCase):
             input_timestamps.append(time.monotonic())
 
         def received_smoothed_data(msg):
-            node.get_logger().warn("received smoothed data {}".format(msg))
+            # node.get_logger().warn("received smoothed data {}".format(msg))
             smoothed_velocities.append(msg.linear.x)
             smoothed_timestamps.append(time.monotonic())            
             
@@ -172,11 +172,16 @@ class TestCommandProfile(unittest.TestCase):
             proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=commands, timeout=60)
         finally:
             node.get_logger().info("Raw Timestamps: {}".format(input_timestamps))
+            node.get_logger().info("Raw Velocities: {}".format(input_velocities))
+            node.get_logger().info("Smoothed Timestamps: {}".format(smoothed_timestamps))
+            node.get_logger().info("Smoothed Velocities: {}".format(smoothed_velocities))
             plt.plot(input_timestamps, input_velocities, label="input")
             plt.plot(smoothed_timestamps, smoothed_velocities, label="smooth")
             plt.xlabel('time')
             plt.ylabel('velocity')
             plt.title("Raw Input vs Smoothed Velocities")
             plt.legend()
+            plt.show()
+            time.sleep(5)
             node.destroy_subscription(input_subscriber)
             node.destroy_subscription(smoothed_subscriber)
