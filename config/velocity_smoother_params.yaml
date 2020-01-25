@@ -18,4 +18,4 @@ velocity_smoother:
     #  0 - none
     #  1 - odometry
     #  2 - robot commands (cmd_vel)
-    robot_feedback: 2
+    robot_feedback: 1
