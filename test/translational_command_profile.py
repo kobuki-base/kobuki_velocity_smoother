@@ -39,7 +39,7 @@ class Parameters(object):
 
 class Command(object):
     def __init__(self):
-        self.cmd_vel, self.odom = self.initialise_messages()
+        self.cmd_vel = self.initialise_messages()
         self.generator = self.generate_profile()
         self.profile = []
 
@@ -96,28 +96,7 @@ class Command(object):
         cmd_vel.angular.x = 0.0
         cmd_vel.angular.y = 0.0
         cmd_vel.angular.z = 0.0
-        odom = nav_msgs.Odometry()
-        odom.header.frame_id = "base_link"
-        odom.pose.pose.position.x = 0.0
-        odom.pose.pose.position.y = 0.0
-        odom.pose.pose.position.z = 0.0
-        odom.pose.pose.orientation.x = 0.0
-        odom.pose.pose.orientation.y = 0.0
-        odom.pose.pose.orientation.z = 0.0
-        odom.pose.pose.orientation.w = 1.0
-        odom.pose.covariance[0]  = 0.1
-        odom.pose.covariance[7]  = 0.1
-        odom.pose.covariance[35] = 0.2
-        odom.pose.covariance[14] = 10.0
-        odom.pose.covariance[21] = 10.0
-        odom.pose.covariance[28] = 10.0
-        odom.twist.twist.linear.x = 0.0
-        odom.twist.twist.linear.y = 0.0
-        odom.twist.twist.linear.z = 0.0
-        odom.twist.twist.angular.x = 0.0
-        odom.twist.twist.angular.y = 0.0
-        odom.twist.twist.angular.z = 0.0
-        return cmd_vel, odom
+        return cmd_vel
 
 class Publisher(object):
     def __init__(self, node_name):
@@ -130,11 +109,6 @@ class Publisher(object):
             topic="~/cmd_vel",
             qos_profile=10,
         )
-        self.odom_publisher = self.node.create_publisher(
-            msg_type=nav_msgs.Odometry,
-            topic="~/odom",
-            qos_profile=10,
-        )
         self.timer = self.node.create_timer(
             timer_period_sec=0.1,
             callback=self.publish
@@ -145,9 +119,7 @@ class Publisher(object):
             commanded_velocity = next(self.command.generator)
             print("Publishing .... [{:0.2f}]".format(commanded_velocity))
             self.command.cmd_vel.linear.x = commanded_velocity
-            self.command.odom.twist.twist.linear.x = commanded_velocity
             self.cmd_vel_publisher.publish(self.command.cmd_vel)
-            self.odom_publisher.publish(self.command.odom)
         except StopIteration:
             print("PROFILE_SENT")
             self.timer.cancel()
@@ -155,7 +127,6 @@ class Publisher(object):
 
     def shutdown(self):
         self.cmd_vel_publisher.destroy()
-        self.odom_publisher.destroy()
         self.node.destroy_timer(self.timer)
         self.node.destroy_node()
 

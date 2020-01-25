@@ -59,7 +59,6 @@ def create_command_profile_node():
         emulate_tty=True,
         remappings=[
             ('~/cmd_vel', '/raw_cmd_vel'),
-            ('~/odom', '/odometry')
         ]
     )
 
@@ -80,7 +79,8 @@ def create_velocity_smoother_node():
         node_executable='velocity_smoother',
         node_name='velocity_smoother',
         output='both',
-        parameters=[params]
+        parameters=[params],
+        remappings=[('smooth_cmd_vel', 'robot_cmd_vel')],
     )
 
 @pytest.mark.rostest
@@ -93,37 +93,17 @@ def generate_test_description():
 
     command_profile_node = create_command_profile_node()
     velocity_smoother_node = create_velocity_smoother_node()
-    talker_node = launch_ros.actions.Node(
-        package='velocity_smoother',
-        node_executable='talker.py',
-        node_name="talker",
-        output='both',
-        emulate_tty=True,
-        remappings=[('chatter', 'talker_chatter')]
-    )
-    listener_node = launch_ros.actions.Node(
-        package='velocity_smoother',
-        node_executable='listener.py',
-        node_name="listener",
-        output='both',
-        emulate_tty=True,
-        remappings=[('chatter', 'listener_chatter')]
-    )
 
     return (
         launch.LaunchDescription([
-             command_profile_node,
-             velocity_smoother_node,
-             talker_node,
-             listener_node,
+            command_profile_node,
+            velocity_smoother_node,
             # Start tests right away - no need to wait for anything
-             launch_testing.actions.ReadyToTest(),
+            launch_testing.actions.ReadyToTest(),
         ]),
         {
             'commands': command_profile_node,
             'velocity_smoother': velocity_smoother_node,
-            'talker': talker_node,
-            'listener': listener_node,
         }
     )
 
@@ -153,8 +133,8 @@ class TestCommandProfile(unittest.TestCase):
         def received_smoothed_data(msg):
             # node.get_logger().warn("received smoothed data {}".format(msg))
             smoothed_velocities.append(msg.linear.x)
-            smoothed_timestamps.append(time.monotonic())            
-            
+            smoothed_timestamps.append(time.monotonic())
+
         input_subscriber = node.create_subscription(
             geometry_msgs.msg.Twist,
             'raw_cmd_vel',
@@ -163,7 +143,7 @@ class TestCommandProfile(unittest.TestCase):
         )
         smoothed_subscriber = node.create_subscription(
             geometry_msgs.msg.Twist,
-            'smooth_cmd_vel',
+            'robot_cmd_vel',
             received_smoothed_data,
             10,
         )
@@ -182,6 +162,6 @@ class TestCommandProfile(unittest.TestCase):
             plt.title("Raw Input vs Smoothed Velocities")
             plt.legend()
             plt.show()
-            time.sleep(5)
+            time.sleep(1)
             node.destroy_subscription(input_subscriber)
             node.destroy_subscription(smoothed_subscriber)
