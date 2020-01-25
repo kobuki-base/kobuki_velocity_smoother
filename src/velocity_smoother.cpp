@@ -297,6 +297,8 @@ void VelocitySmoother::timerCB()
   else if (input_active_ == true)
   {
     // We already reached target velocity; just keep resending last command while input is active
+    cmd_vel->linear.x = last_cmd_vel_linear_x_;
+    cmd_vel->angular.z = last_cmd_vel_angular_z_;
     smooth_vel_pub_->publish(std::move(cmd_vel));
   }
 }
