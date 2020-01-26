@@ -59,8 +59,9 @@ def create_command_profile_node():
         emulate_tty=True,
         remappings=[
             ('~/cmd_vel', '/raw_cmd_vel'),
-            ('~/odom', '/odometry')
-        ]
+            ('~/odom', '/odometry'),
+            ('~/actual_cmd_vel', '/smooth_cmd_vel')
+        ],
     )
 
 def create_velocity_smoother_node():
@@ -75,6 +76,7 @@ def create_velocity_smoother_node():
     params_file = os.path.join(share_dir, 'config', 'velocity_smoother_params.yaml')
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
+        params['robot_feedback'] = 1  # ODOMETRY
     return launch_ros.actions.Node(
         package='velocity_smoother',
         node_executable='velocity_smoother',
@@ -171,17 +173,18 @@ class TestCommandProfile(unittest.TestCase):
             node.get_logger().info("Waiting for PROFILE_SENT")
             proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=commands, timeout=60)
         finally:
-            node.get_logger().info("Raw Timestamps: {}".format(input_timestamps))
-            node.get_logger().info("Raw Velocities: {}".format(input_velocities))
-            node.get_logger().info("Smoothed Timestamps: {}".format(smoothed_timestamps))
-            node.get_logger().info("Smoothed Velocities: {}".format(smoothed_velocities))
+            # node.get_logger().info("Raw Timestamps: {}".format(input_timestamps))
+            # node.get_logger().info("Raw Velocities: {}".format(input_velocities))
+            # node.get_logger().info("Smoothed Timestamps: {}".format(smoothed_timestamps))
+            # node.get_logger().info("Smoothed Velocities: {}".format(smoothed_velocities))
             plt.plot(input_timestamps, input_velocities, label="input")
             plt.plot(smoothed_timestamps, smoothed_velocities, label="smooth")
             plt.xlabel('time')
             plt.ylabel('velocity')
             plt.title("Raw Input vs Smoothed Velocities")
             plt.legend()
-            plt.show()
+            #plt.show()
+            plt.savefig('profiles.png')
             time.sleep(5)
             node.destroy_subscription(input_subscriber)
             node.destroy_subscription(smoothed_subscriber)

@@ -37,7 +37,7 @@ class Parameters(object):
         self.ramp_increment = 0.02
         self.ramp_decrement = 0.02
 
-class Command(object):
+class CommandProfile(object):
     def __init__(self):
         self.cmd_vel, self.odom = self.initialise_messages()
         self.generator = self.generate_profile()
@@ -46,6 +46,7 @@ class Command(object):
     def generate_profile(self):
         parameters = Parameters()
         x_vel = 0.0
+        fallback_interval_length = 10
         # RAMP_UP
         while x_vel <= parameters.velocity_maximum:
             self.profile.append(x_vel)
@@ -53,9 +54,8 @@ class Command(object):
             x_vel += parameters.ramp_increment
         # RAMP_LEVEL
         count = 0
-        # interval_length = len(self.profile)
-        interval_length = 10
-        while count < interval_length:
+        # fallback_interval_length = len(self.profile)
+        while count < fallback_interval_length:
             self.profile.append(x_vel)
             yield x_vel
             count += 1
@@ -67,21 +67,21 @@ class Command(object):
             x_vel = 0.0 if x_vel < 0.0 else x_vel
         # ZERO
         count = 0
-        while count < interval_length:
+        while count < fallback_interval_length:
             self.profile.append(x_vel)
             yield x_vel
             count += 1
         # UP
         count = 0
         x_vel = parameters.velocity_maximum
-        while count < interval_length:
+        while count < fallback_interval_length:
             self.profile.append(x_vel)
             yield x_vel
             count += 1
         # DOWN
         count = 0
         x_vel = 0.0
-        while count < interval_length:
+        while count < fallback_interval_length:
             self.profile.append(x_vel)
             yield x_vel
             count += 1
@@ -119,10 +119,10 @@ class Command(object):
         odom.twist.twist.angular.z = 0.0
         return cmd_vel, odom
 
-class Publisher(object):
+class ExecutionEngine(object):
     def __init__(self, node_name):
         self.stopped = False
-        self.command = Command()
+        self.command = CommandProfile()
 
         self.node = rclpy.create_node(node_name)
         self.cmd_vel_publisher = self.node.create_publisher(
@@ -137,17 +137,31 @@ class Publisher(object):
         )
         self.timer = self.node.create_timer(
             timer_period_sec=0.1,
-            callback=self.publish
+            callback=self.update_and_publish_command
         )
 
-    def publish(self):
+        self.actual_cmd_vel_subscriber = self.node.create_subscription(
+            geometry_msgs.Twist,
+            '~/actual_cmd_vel',
+            self.update_and_publish_odometry,
+            10,
+        )
+
+    def update_and_publish_odometry(self, msg):
+        """
+        Tune into the actual commanded velocity (i.e. after the smoother) and
+        update the odometry accordingly.
+        """
+        # run with a single-threaded executor, don't need to worry about concurrency
+        self.command.odom.twist.twist.linear.x = msg.linear.x
+        self.odom_publisher.publish(self.command.odom)
+
+    def update_and_publish_command(self):
         try:
             commanded_velocity = next(self.command.generator)
             print("Publishing .... [{:0.2f}]".format(commanded_velocity))
             self.command.cmd_vel.linear.x = commanded_velocity
-            self.command.odom.twist.twist.linear.x = commanded_velocity
             self.cmd_vel_publisher.publish(self.command.cmd_vel)
-            self.odom_publisher.publish(self.command.odom)
         except StopIteration:
             print("PROFILE_SENT")
             self.timer.cancel()
@@ -168,17 +182,17 @@ if __name__== "__main__":
     banner("Command Profile")
     rclpy.init()
 
-    publisher = Publisher(node_name="publisher")
+    engine = ExecutionEngine(node_name="publisher")
 
     executor = rclpy.executors.SingleThreadedExecutor()
-    executor.add_node(publisher.node)
+    executor.add_node(engine.node)
 
     try:
-        while not publisher.stopped:
+        while not engine.stopped:
             executor.spin_once(timeout_sec=0.05)
     except KeyboardInterrupt:
         pass
 
     executor.shutdown()
-    publisher.shutdown()
+    engine.shutdown()
     rclpy.shutdown()

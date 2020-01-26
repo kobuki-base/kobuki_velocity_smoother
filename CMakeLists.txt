@@ -57,7 +57,7 @@ install(
 install(
   PROGRAMS
     test/test_translational_smoothing.py
-  DESTINATION share/${PROJECT_NAME}/launch_tests
+  DESTINATION share/${PROJECT_NAME}/launch_test
 )
 
 ament_package()
