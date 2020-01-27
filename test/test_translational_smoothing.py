@@ -44,13 +44,6 @@ import std_msgs.msg
 
 
 def create_command_profile_node():
-    script_pathname = os.path.join(
-        ament_index_python.get_package_prefix('velocity_smoother'),
-        'lib',
-        'velocity_smoother',
-        'test_nodes',
-        'translational_command_profile.py'
-    )
     return launch_ros.actions.Node(
         package='velocity_smoother',
         node_executable='translational_command_profile.py',
@@ -59,31 +52,31 @@ def create_command_profile_node():
         emulate_tty=True,
         remappings=[
             ('~/cmd_vel', '/raw_cmd_vel'),
-            ('~/odom', '/odometry'),
+            ('~/odometry', '/odometry'),
             ('~/actual_cmd_vel', '/smooth_cmd_vel')
         ],
     )
 
 def create_velocity_smoother_node():
-    share_dir = ament_index_python.packages.get_package_share_directory('velocity_smoother')
-
-    # There are two different ways to pass parameters to a non-composed node;
-    # either by specifying the path to the file containing the parameters, or by
-    # passing a dictionary containing the key -> value pairs of the parameters.
-    # When starting a *composed* node on the other hand, only the dictionary
-    # style is supported.  To keep the code between the non-composed and
-    # composed launch file similar, we use that style here as well.
-    params_file = os.path.join(share_dir, 'config', 'velocity_smoother_params.yaml')
-    with open(params_file, 'r') as f:
-        params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
-        params['robot_feedback'] = 1  # ODOMETRY
+    # Stage the test so that it's slow on the ramp up, fine on the ramp down
+    # Switch between the three variants of feedback, results should remain the same
+    parameters = {}
+    parameters['speed_lim_v'] = 0.8
+    parameters['speed_lim_w'] = 5.4
+    parameters['accel_lim_v'] = 0.125
+    parameters['accel_lim_w'] = 3.5
+    parameters['frequency'] = 20.0
+    parameters['decel_factor'] = 2.0
+    parameters['robot_feedback'] = 1  # 1 - ODOMETRY, 2 - COMMANDS (velocity_smoother.hpp)
     return launch_ros.actions.Node(
         package='velocity_smoother',
         node_executable='velocity_smoother',
         node_name='velocity_smoother',
         output='both',
-        parameters=[params],
-        remappings=[('smooth_cmd_vel', 'robot_cmd_vel')],
+        parameters=[parameters],
+        remappings=[
+            ('robot_cmd_vel', 'smooth_cmd_vel')
+        ],
     )
 
 @pytest.mark.rostest
@@ -146,7 +139,7 @@ class TestCommandProfile(unittest.TestCase):
         )
         smoothed_subscriber = node.create_subscription(
             geometry_msgs.msg.Twist,
-            'robot_cmd_vel',
+            'smooth_cmd_vel',
             received_smoothed_data,
             10,
         )
@@ -154,10 +147,10 @@ class TestCommandProfile(unittest.TestCase):
             node.get_logger().info("Waiting for PROFILE_SENT")
             proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=commands, timeout=60)
         finally:
-            # node.get_logger().info("Raw Timestamps: {}".format(input_timestamps))
-            # node.get_logger().info("Raw Velocities: {}".format(input_velocities))
-            # node.get_logger().info("Smoothed Timestamps: {}".format(smoothed_timestamps))
-            # node.get_logger().info("Smoothed Velocities: {}".format(smoothed_velocities))
+            self.assertAlmostEqual(0.5, max(input_velocities))
+            self.assertTrue(0.5 > max(smoothed_velocities))
+            self.assertTrue(0.4 < max(smoothed_velocities))
+            # plot a graph for easy viz
             plt.plot(input_timestamps, input_velocities, label="input")
             plt.plot(smoothed_timestamps, smoothed_velocities, label="smooth")
             plt.xlabel('time')
