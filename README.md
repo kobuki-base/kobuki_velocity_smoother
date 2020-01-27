@@ -42,7 +42,7 @@ Publications
 
 Simply wire up the channels to their appropriate topics. The tests can be a useful starting point.
 
-### Feedback
+## Feedback
 
 There are some reasons to use robot feedback. The two most frequently faced:
 
