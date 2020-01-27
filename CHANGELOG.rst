@@ -4,11 +4,11 @@ Velocity Smoother
 
 Forthcoming
 -----------
-* ...
+* [tests] translational smoothing test added, `#7 <https://github.com/kobuki-base/velocity_smoother/pull/7>`_
 
 0.13.0 (2020-01-20)
 -------------------
-* Refactored for ROS 2 and renamed to velocity_smoother, `#1 <https://github.com/kobuki-base/velocity_smoother/pull/1>`_
+* [infra] refactored for ROS 2 and renamed to velocity_smoother, `#1 <https://github.com/kobuki-base/velocity_smoother/pull/1>`_
 
 0.6.3 (2014-12-05)
 ------------------

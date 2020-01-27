@@ -53,7 +53,7 @@ private:
     NONE,
     ODOMETRY,
     COMMANDS
-  } robot_feedback_;  /**< What source to use as robot velocity feedback */
+  } feedback_;  /**< What source to use as feedback for smoothed velocity calculations */
 
   bool quiet_;        /**< Quieten some warnings that are unavoidable because of velocity multiplexing. **/
   double speed_lim_v_, accel_lim_v_, decel_lim_v_;
