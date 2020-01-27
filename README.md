@@ -6,6 +6,8 @@ components of both speed and acceleration. Feedback from either
 the odometry / actual commanded velocity can be used to provide
 a better result in some situations (read further below).
 
+![Profiles](test/translational_smoothing_profiles.png)
+
 ## Parameters
 
 * **~accel_lim_v** (double, default: 0.8): linear acceleration limit
