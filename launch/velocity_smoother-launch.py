@@ -16,7 +16,6 @@ import launch_ros.actions
 
 import yaml
 
-
 def generate_launch_description():
     share_dir = ament_index_python.packages.get_package_share_directory('velocity_smoother')
 
@@ -28,10 +27,12 @@ def generate_launch_description():
     # composed launch file similar, we use that style here as well.
     params_file = os.path.join(share_dir, 'config', 'velocity_smoother_params.yaml')
     with open(params_file, 'r') as f:
-        params = yaml.safe_load(f)['velocity_smoother_node']['ros__parameters']
-    velocity_smoother_node = launch_ros.actions.Node(package='velocity_smoother',
-                                                     node_executable='velocity_smoother_node',
-                                                     output='both',
-                                                     parameters=[params])
+        params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
+    velocity_smoother_node = launch_ros.actions.Node(
+        package='velocity_smoother',
+        node_executable='velocity_smoother',
+        node_name='velocity_smoother',
+        output='both',
+        parameters=[params])
 
     return launch.LaunchDescription([velocity_smoother_node])

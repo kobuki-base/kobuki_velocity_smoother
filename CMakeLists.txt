@@ -27,9 +27,8 @@ add_executable(velocity_smoother_node src/velocity_smoother_node.cpp)
 ament_target_dependencies(velocity_smoother_node
   "rclcpp"
 )
-target_link_libraries(velocity_smoother_node
-  ${PROJECT_NAME}
-)
+target_link_libraries(velocity_smoother_node ${PROJECT_NAME})
+set_target_properties(velocity_smoother_node PROPERTIES OUTPUT_NAME velocity_smoother)
 
 rclcpp_components_register_nodes(${PROJECT_NAME}
   "velocity_smoother::VelocitySmoother")
@@ -47,6 +46,18 @@ install(TARGETS velocity_smoother_node
 )
 install(DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS
+    test/translational_command_profile.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS
+    test/test_translational_smoothing.py
+  DESTINATION share/${PROJECT_NAME}/launch_test
 )
 
 ament_package()

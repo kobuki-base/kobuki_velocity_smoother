@@ -53,7 +53,7 @@ private:
     NONE,
     ODOMETRY,
     COMMANDS
-  } robot_feedback;  /**< What source to use as robot velocity feedback */
+  } robot_feedback_;  /**< What source to use as robot velocity feedback */
 
   bool quiet_;        /**< Quieten some warnings that are unavoidable because of velocity multiplexing. **/
   double speed_lim_v_, accel_lim_v_, decel_lim_v_;
@@ -61,8 +61,8 @@ private:
 
   geometry_msgs::msg::Twist current_vel_;
   geometry_msgs::msg::Twist target_vel_;
-  double last_cmd_vel_linear_x_;
-  double last_cmd_vel_angular_z_;
+  double last_cmd_vel_linear_x_{0.0};
+  double last_cmd_vel_angular_z_{0.0};
 
   double period_;
   double decel_factor_;
