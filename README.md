@@ -1,5 +1,9 @@
 # Velocity Smoother
 
+[[About](#about)][[Parameters](#parameters)][[Topics](#topics)][[Usage](#usage)][[Feedback](#feedback)]
+
+## About
+
 ROS2 package for smoothing commanded velocities represented by a stream of
 `geometry_msg/Twist` messages. It applies limits to linear and angular
 components of both speed and acceleration. Feedback from either
@@ -30,13 +34,11 @@ Publications
 
 * **~smoothed** (`geometry_msgs/Twist`): smoothed output velocity commands respecting velocity and acceleration limits
 
-## Features
+## Usage
 
 * All the parameters except frequency are dynamically reconfigurable.
 * Linear and angular velocities are smoothed proportionally to the more restricted, so we guaranty a constant rotation radius.
 * If the input topic gets inactive, and the last command is not a zero-velocity one, (maybe the controller crashed, or just forgot good manners...), we introduce a fake zero-velocity command after a sort timeout.
-
-## Usage
 
 Simply wire up the channels to their appropriate topics. The tests can be a useful starting point.
 
