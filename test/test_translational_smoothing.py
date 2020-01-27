@@ -51,9 +51,9 @@ def create_command_profile_node():
         output='both',
         emulate_tty=True,
         remappings=[
-            ('~/cmd_vel', '/raw_cmd_vel'),
+            ('~/actual/cmd_vel', '/cmd_vel'),
+            ('~/generated/cmd_vel', '~/cmd_vel'),
             ('~/odometry', '/odometry'),
-            ('~/actual_cmd_vel', '/smooth_cmd_vel')
         ],
     )
 
@@ -67,7 +67,7 @@ def create_velocity_smoother_node():
     parameters['accel_lim_w'] = 3.5
     parameters['frequency'] = 20.0
     parameters['decel_factor'] = 2.0
-    parameters['robot_feedback'] = 1  # 1 - ODOMETRY, 2 - COMMANDS (velocity_smoother.hpp)
+    parameters['feedback'] = 1  # 1 - ODOMETRY, 2 - COMMANDS (velocity_smoother.hpp)
     return launch_ros.actions.Node(
         package='velocity_smoother',
         node_executable='velocity_smoother',
@@ -75,7 +75,10 @@ def create_velocity_smoother_node():
         output='both',
         parameters=[parameters],
         remappings=[
-            ('robot_cmd_vel', 'smooth_cmd_vel')
+            ('~/feedback/odometry', '/odometry'),
+            ('~/feedback/cmd_vel', '/cmd_vel'),
+            ('~/input', '/commands/cmd_vel'),
+            ('~/smoothed', '/cmd_vel'),
         ],
     )
 
@@ -133,13 +136,13 @@ class TestCommandProfile(unittest.TestCase):
 
         input_subscriber = node.create_subscription(
             geometry_msgs.msg.Twist,
-            'raw_cmd_vel',
+            '/commands/cmd_vel',
             received_input_data,
             10,
         )
         smoothed_subscriber = node.create_subscription(
             geometry_msgs.msg.Twist,
-            'smooth_cmd_vel',
+            '/cmd_vel',
             received_smoothed_data,
             10,
         )

@@ -127,7 +127,7 @@ class ExecutionEngine(object):
         self.node = rclpy.create_node(node_name)
         self.cmd_vel_publisher = self.node.create_publisher(
             msg_type=geometry_msgs.Twist,
-            topic="~/cmd_vel",
+            topic="~/generated/cmd_vel",
             qos_profile=10,
         )
         self.timer = self.node.create_timer(
@@ -135,15 +135,16 @@ class ExecutionEngine(object):
             callback=self.update_and_publish_command
         )
 
+        # tune into the actual cmd_vel (after smoothing/muxing) to generate odometry updates
         self.actual_cmd_vel_subscriber = self.node.create_subscription(
             geometry_msgs.Twist,
-            '~/actual_cmd_vel',
+            '~/actual/cmd_vel',
             self.update_and_publish_odometry,
             10,
         )
         self.odom_publisher = self.node.create_publisher(    
-            msg_type=nav_msgs.Odometry,    
-            topic="~/odometry",    
+            msg_type=nav_msgs.Odometry,
+            topic="~/odometry",
             qos_profile=10,    
         )
 
@@ -182,7 +183,7 @@ if __name__== "__main__":
     banner("Command Profile")
     rclpy.init()
 
-    engine = ExecutionEngine(node_name="publisher")
+    engine = ExecutionEngine(node_name="commands")
 
     executor = rclpy.executors.SingleThreadedExecutor()
     executor.add_node(engine.node)

@@ -49,14 +49,14 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp
   double frequency = this->declare_parameter("frequency", 20.0);
   quiet_ = this->declare_parameter("quiet", false);
   decel_factor_ = this->declare_parameter("decel_factor", 1.0);
-  int feedback = this->declare_parameter("robot_feedback", static_cast<int>(NONE));
+  int feedback = this->declare_parameter("feedback", static_cast<int>(NONE));
 
   if ((static_cast<int>(feedback) < NONE) || (static_cast<int>(feedback) > COMMANDS))
   {
     throw std::runtime_error("Invalid robot feedback type. Valid options are 0 (NONE, default), 1 (ODOMETRY) and 2 (COMMANDS)");
   }
 
-  robot_feedback_ = static_cast<RobotFeedbackType>(feedback);
+  feedback_ = static_cast<RobotFeedbackType>(feedback);
 
   // Mandatory parameters
   rclcpp::ParameterValue speed_v = this->declare_parameter(
@@ -100,10 +100,10 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options) : rclcpp
   decel_lim_w_ = decel_factor_*accel_lim_w_;
 
   // Publishers and subscribers
-  odometry_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("odometry", rclcpp::QoS(1), std::bind(&VelocitySmoother::odometryCB, this, std::placeholders::_1));
-  current_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("robot_cmd_vel", rclcpp::QoS(1), std::bind(&VelocitySmoother::robotVelCB, this, std::placeholders::_1));
-  raw_in_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("raw_cmd_vel", rclcpp::QoS(1), std::bind(&VelocitySmoother::velocityCB, this, std::placeholders::_1));
-  smooth_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("smooth_cmd_vel", 1);
+  odometry_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("~/feedback/odometry", rclcpp::QoS(1), std::bind(&VelocitySmoother::odometryCB, this, std::placeholders::_1));
+  current_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("~/feedback/cmd_vel", rclcpp::QoS(1), std::bind(&VelocitySmoother::robotVelCB, this, std::placeholders::_1));
+  raw_in_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("~/input", rclcpp::QoS(1), std::bind(&VelocitySmoother::velocityCB, this, std::placeholders::_1));
+  smooth_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("~/smoothed", 1);
 
   period_ = 1.0 / frequency;
   timer_ = this->create_wall_timer(std::chrono::milliseconds(static_cast<uint64_t>(period_ * 1000.0)), std::bind(&VelocitySmoother::timerCB, this));
@@ -156,7 +156,7 @@ void VelocitySmoother::velocityCB(const geometry_msgs::msg::Twist::SharedPtr msg
 
 void VelocitySmoother::odometryCB(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  if (robot_feedback_ == ODOMETRY)
+  if (feedback_ == ODOMETRY)
   {
     current_vel_ = msg->twist.twist;
   }
@@ -166,7 +166,7 @@ void VelocitySmoother::odometryCB(const nav_msgs::msg::Odometry::SharedPtr msg)
 
 void VelocitySmoother::robotVelCB(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
-  if (robot_feedback_ == COMMANDS)
+  if (feedback_ == COMMANDS)
   {
     current_vel_ = *msg;
   }
@@ -207,7 +207,7 @@ void VelocitySmoother::timerCB()
   bool v_different_from_feedback = current_vel_.linear.x < v_deviation_lower_bound || current_vel_.linear.x > v_deviation_upper_bound;
   bool w_different_from_feedback = current_vel_.angular.z < w_deviation_lower_bound || current_vel_.angular.z > w_deviation_upper_bound;
 
-  if ((robot_feedback_ != NONE) && (input_active_ == true) && (cb_avg_time_ > 0.0) &&
+  if ((feedback_ != NONE) && (input_active_ == true) && (cb_avg_time_ > 0.0) &&
       (((this->get_clock()->now() - last_velocity_cb_time_).seconds() > 5.0*cb_avg_time_)     || // 5 missing msgs
           v_different_from_feedback || w_different_from_feedback))
   {
@@ -218,7 +218,7 @@ void VelocitySmoother::timerCB()
       // this condition can be unavoidable due to preemption of current velocity control on
       // velocity multiplexer so be quiet if we're instructed to do so
       RCLCPP_WARN(get_logger(), "Velocity Smoother : using robot velocity feedback %s instead of last command: %f, %f, %f",
-                  std::string(robot_feedback_ == ODOMETRY ? "odometry" : "end commands").c_str(),
+                  std::string(feedback_ == ODOMETRY ? "odometry" : "end commands").c_str(),
                   (this->get_clock()->now() - last_velocity_cb_time_).seconds(),
                   current_vel_.linear.x  - last_cmd_vel_linear_x_,
                   current_vel_.angular.z - last_cmd_vel_angular_z_);
@@ -239,7 +239,7 @@ void VelocitySmoother::timerCB()
     double v_inc, w_inc, max_v_inc, max_w_inc;
 
     v_inc = target_vel_.linear.x - last_cmd_vel_linear_x_;
-    if ((robot_feedback_ == ODOMETRY) && (current_vel_.linear.x*target_vel_.linear.x < 0.0))
+    if ((feedback_ == ODOMETRY) && (current_vel_.linear.x*target_vel_.linear.x < 0.0))
     {
       // countermarch (on robots with significant inertia; requires odometry feedback to be detected)
       max_v_inc = decel_lim_v_*period_;
@@ -250,7 +250,7 @@ void VelocitySmoother::timerCB()
     }
 
     w_inc = target_vel_.angular.z - last_cmd_vel_angular_z_;
-    if ((robot_feedback_ == ODOMETRY) && (current_vel_.angular.z*target_vel_.angular.z < 0.0))
+    if ((feedback_ == ODOMETRY) && (current_vel_.angular.z*target_vel_.angular.z < 0.0))
     {
       // countermarch (on robots with significant inertia; requires odometry feedback to be detected)
       max_w_inc = decel_lim_w_*period_;
@@ -341,10 +341,10 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
 
       decel_factor_ = parameter.get_value<double>();
     }
-    else if (parameter.get_name() == "robot_feedback")
+    else if (parameter.get_name() == "feedback")
     {
       result.successful = false;
-      result.reason = "robot_feedback cannot be changed on-the-fly";
+      result.reason = "feedback cannot be changed on-the-fly";
       break;
     }
     else if (parameter.get_name() == "speed_lim_v")

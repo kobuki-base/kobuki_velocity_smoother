@@ -1,4 +1,5 @@
 bin
 build
 lib
-
+test/.cache
+test/__pycache__
