@@ -4,6 +4,11 @@ Velocity Smoother
 
 Forthcoming
 -----------
+
+0.14.0 (2020-01-20)
+-------------------
+* [ros2] parameters/topics renamed more sensibly, `#8 <https://github.com/kobuki-base/velocity_smoother/pull/8>`_
+* [docs] moved from the ROS1 wiki and updated, `#8 <https://github.com/kobuki-base/velocity_smoother/pull/8>`_
 * [tests] translational smoothing test added, `#7 <https://github.com/kobuki-base/velocity_smoother/pull/7>`_
 
 0.13.0 (2020-01-20)
