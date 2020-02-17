@@ -21,6 +21,7 @@ import launch_testing.actions
 import launch_testing_ros
 import rclpy
 import rclpy.qos
+from launch_testing.asserts import assertInStdout
 
 import pytest
 
@@ -105,9 +106,21 @@ def generate_test_description():
 
 class TestCommandProfile(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        rclpy.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        rclpy.shutdown()
+
+    def setUp(self):
+        self.node = rclpy.create_node('test_velocity_smoother')
+
+    def tearDown(self):
+        self.node.destroy_node()
+
     def test_subscribe_vel_topics(self, launch_service, commands, proc_output):
-        launch_context = launch_service.context
-        node = launch_context.locals.launch_ros_node
         input_velocities = []
         input_timestamps = []
         smoothed_velocities = []
@@ -121,24 +134,32 @@ class TestCommandProfile(unittest.TestCase):
             smoothed_velocities.append(msg.linear.x)
             smoothed_timestamps.append(time.monotonic())
 
-        input_subscriber = node.create_subscription(
+        input_subscriber = self.node.create_subscription(
             geometry_msgs.msg.Twist,
             '/commands/cmd_vel',
             received_input_data,
             10,
         )
-        smoothed_subscriber = node.create_subscription(
+        smoothed_subscriber = self.node.create_subscription(
             geometry_msgs.msg.Twist,
             '/cmd_vel',
             received_smoothed_data,
             10,
         )
         try:
-            node.get_logger().info("Waiting for PROFILE_SENT")
-            proc_output.assertWaitFor(expected_output="PROFILE_SENT", process=commands, timeout=60)
+            done = False
+            while rclpy.ok() and not done:
+                rclpy.spin_once(self.node, timeout_sec=0.1)
+                try:
+                    assertInStdout(proc_output, "PROFILE_SENT", commands)
+                    done = True
+                except launch_testing.util.proc_lookup.NoMatchingProcessException:
+                    pass
+                except AssertionError:
+                    pass
         finally:
             self.assertAlmostEqual(0.5, max(input_velocities))
             self.assertTrue(0.5 > max(smoothed_velocities))
             self.assertTrue(0.4 < max(smoothed_velocities))
-            node.destroy_subscription(input_subscriber)
-            node.destroy_subscription(smoothed_subscriber)
+            self.node.destroy_subscription(input_subscriber)
+            self.node.destroy_subscription(smoothed_subscriber)
