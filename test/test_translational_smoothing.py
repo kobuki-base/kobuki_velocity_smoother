@@ -10,21 +10,10 @@
 # Imports
 ##############################################################################
 
-import matplotlib
-# choose a backend that lets it construct plots off the main thread
-#  https://stackoverflow.com/questions/49921721/runtimeerror-main-thread-is-not-in-main-loop-with-matplotlib-and-flask
-matplotlib.use('Agg')
-
-import functools
-import matplotlib.pyplot as plt
 import os
-import sys
 import time
 import unittest
-import uuid
-import yaml
 
-import ament_index_python
 import launch
 import launch_ros
 import launch_ros.actions
@@ -125,12 +114,10 @@ class TestCommandProfile(unittest.TestCase):
         smoothed_timestamps = []
 
         def received_input_data(msg):
-            # node.get_logger().warn("received input data {}".format(msg))
             input_velocities.append(msg.linear.x)
             input_timestamps.append(time.monotonic())
 
         def received_smoothed_data(msg):
-            # node.get_logger().warn("received smoothed data {}".format(msg))
             smoothed_velocities.append(msg.linear.x)
             smoothed_timestamps.append(time.monotonic())
 
@@ -153,13 +140,5 @@ class TestCommandProfile(unittest.TestCase):
             self.assertAlmostEqual(0.5, max(input_velocities))
             self.assertTrue(0.5 > max(smoothed_velocities))
             self.assertTrue(0.4 < max(smoothed_velocities))
-            # plot a graph for easy viz
-            plt.plot(input_timestamps, input_velocities, label="input")
-            plt.plot(smoothed_timestamps, smoothed_velocities, label="smooth")
-            plt.xlabel('time')
-            plt.ylabel('velocity')
-            plt.title("Raw Input vs Smoothed Velocities")
-            plt.legend()
-            plt.savefig('profiles.png')
             node.destroy_subscription(input_subscriber)
             node.destroy_subscription(smoothed_subscriber)
