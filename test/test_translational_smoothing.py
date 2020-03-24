@@ -14,6 +14,8 @@ import os
 import time
 import unittest
 
+# choose a backend that lets it construct plots off the main thread
+#  https://stackoverflow.com/questions/49921721/runtimeerror-main-thread-is-not-in-main-loop-with-matplotlib-and-flask
 import matplotlib
 matplotlib.use('Agg')  # Force matplotlib to not use an X-Windows backend
 import matplotlib.pyplot as plt
