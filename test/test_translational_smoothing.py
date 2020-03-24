@@ -14,6 +14,8 @@ import os
 import time
 import unittest
 
+import matplotlib
+matplotlib.use('Agg')  # Force matplotlib to not use an X-Windows backend
 import matplotlib.pyplot as plt
 
 import launch
