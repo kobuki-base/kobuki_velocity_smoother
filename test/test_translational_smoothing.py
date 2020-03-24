@@ -14,6 +14,8 @@ import os
 import time
 import unittest
 
+import matplotlib.pyplot as plt
+
 import launch
 import launch_ros
 import launch_ros.actions
@@ -151,7 +153,7 @@ class TestCommandProfile(unittest.TestCase):
             while rclpy.ok() and not done:
                 rclpy.spin_once(self.node, timeout_sec=0.1)
                 try:
-                    assertInStdout(proc_output, "PROFILE_SENT", commands)
+                    assertInStdout(proc_output, 'PROFILE_SENT', commands)
                     done = True
                 except launch_testing.util.proc_lookup.NoMatchingProcessException:
                     pass
@@ -161,5 +163,13 @@ class TestCommandProfile(unittest.TestCase):
             self.assertAlmostEqual(0.5, max(input_velocities))
             self.assertTrue(0.5 > max(smoothed_velocities))
             self.assertTrue(0.4 < max(smoothed_velocities))
+            # plot a graph for easy viz
+            plt.plot(input_timestamps, input_velocities, label='input')
+            plt.plot(smoothed_timestamps, smoothed_velocities, label='smooth')
+            plt.xlabel('time')
+            plt.ylabel('velocity')
+            plt.title('Raw Input vs Smoothed Velocities')
+            plt.legend()
+            plt.savefig('profiles.png')
             self.node.destroy_subscription(input_subscriber)
             self.node.destroy_subscription(smoothed_subscriber)
