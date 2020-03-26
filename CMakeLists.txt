@@ -60,4 +60,12 @@ install(
   DESTINATION share/${PROJECT_NAME}/launch_test
 )
 
+if(BUILD_TESTING)
+  find_package(launch_testing_ament_cmake REQUIRED)
+  add_launch_test(
+    "test/test_translational_smoothing.py"
+    TIMEOUT 30
+  )
+endif()
+
 ament_package()
