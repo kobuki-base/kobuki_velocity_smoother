@@ -157,6 +157,10 @@ class TestCommandProfile(unittest.TestCase):
             while rclpy.ok() and not done:
                 rclpy.spin_once(self.node, timeout_sec=0.1)
                 try:
+                    # this works by virtue of having been printed dt seconds
+                    # (0.1s) after the last publication, which is sufficient
+                    # time for final subscription callbacks here to be
+                    # processed
                     assertInStdout(proc_output, 'PROFILE_SENT', commands)
                     done = True
                 except launch_testing.util.proc_lookup.NoMatchingProcessException:
