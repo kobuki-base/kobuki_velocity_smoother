@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2020 Daniel Stonier
@@ -10,6 +9,8 @@
 # Imports
 ##############################################################################
 
+import os
+import sys
 import time
 import unittest
 
@@ -38,9 +39,11 @@ matplotlib.use('Agg')  # Force matplotlib to not use an X-Windows backend
 
 
 def create_command_profile_node():
+    path_to_profile_dir = os.path.dirname(__file__)
+    path_to_command_profile = os.path.join(path_to_profile_dir, 'translational_command_profile.py')
     return launch_ros.actions.Node(
-        package='velocity_smoother',
-        executable='translational_command_profile.py',
+        executable=sys.executable,
+        arguments=[path_to_command_profile],
         name='commands',
         output='both',
         emulate_tty=True,
