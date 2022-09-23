@@ -374,10 +374,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
       }
 
       accel_lim_w_ = parameter.get_value<double>();
-    } else {
-      result.successful = false;
-      result.reason = "unknown parameter";
-      break;
     }
   }
 
