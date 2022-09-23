@@ -18,13 +18,12 @@
  *****************************************************************************/
 
 #include <algorithm>
-#include <string>
 #include <vector>
 
 #include <geometry_msgs/msg/twist.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 
 /*****************************************************************************
 ** Namespaces
