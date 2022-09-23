@@ -63,15 +63,7 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
 
   // Mandatory parameters
   this->declare_parameter("speed_lim_v", 0.8);
-
-  rclcpp::ParameterValue speed_w = this->declare_parameter(
-    "speed_lim_w",
-    rclcpp::ParameterValue(5.4)
-  );
-  if (speed_w.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
-    throw std::runtime_error("speed_lim_w must be specified as a double");
-  }
-  speed_lim_w_ = speed_w.get<double>();
+  this->declare_parameter("speed_lim_w", 5.4);
 
   rclcpp::ParameterValue accel_v = this->declare_parameter(
     "accel_lim_v",
@@ -146,12 +138,13 @@ void VelocitySmoother::velocityCB(const geometry_msgs::msg::Twist::SharedPtr msg
 
   // Bound speed with the maximum values
   double speed_lim_v = get_parameter("speed_lim_v").as_double();
+  double speed_lim_w = get_parameter("speed_lim_w").as_double();
   target_vel_.linear.x =
     msg->linear.x > 0.0 ? std::min(msg->linear.x, speed_lim_v) : std::max(
     msg->linear.x, -speed_lim_v);
   target_vel_.angular.z =
-    msg->angular.z > 0.0 ? std::min(msg->angular.z, speed_lim_w_) : std::max(
-    msg->angular.z, -speed_lim_w_);
+    msg->angular.z > 0.0 ? std::min(msg->angular.z, speed_lim_w) : std::max(
+    msg->angular.z, -speed_lim_w);
 }
 
 void VelocitySmoother::odometryCB(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -328,14 +321,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
       result.successful = false;
       result.reason = "feedback cannot be changed on-the-fly";
       break;
-    } else if (parameter.get_name() == "speed_lim_w") {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
-        result.successful = false;
-        result.reason = "speed_lim_w must be a double";
-        break;
-      }
-
-      speed_lim_w_ = parameter.get_value<double>();
     } else if (parameter.get_name() == "accel_lim_v") {
       if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
         result.successful = false;
