@@ -10,29 +10,27 @@
 # Imports
 ##############################################################################
 
-import os
 import time
 import unittest
 
-# choose a backend that lets it construct plots off the main thread
-#  https://stackoverflow.com/questions/49921721/runtimeerror-main-thread-is-not-in-main-loop-with-matplotlib-and-flask
-import matplotlib
-matplotlib.use('Agg')  # Force matplotlib to not use an X-Windows backend
-import matplotlib.pyplot as plt
+import geometry_msgs.msg
 
 import launch
-import launch_ros
 import launch_ros.actions
 import launch_testing.actions
-import launch_testing_ros
-import rclpy
-import rclpy.qos
 from launch_testing.asserts import assertInStdout
+
+import matplotlib
+import matplotlib.pyplot as plt
 
 import pytest
 
-import geometry_msgs.msg
-import std_msgs.msg
+import rclpy
+import rclpy.qos
+
+# choose a backend that lets it construct plots off the main thread
+#  https://stackoverflow.com/questions/49921721/runtimeerror-main-thread-is-not-in-main-loop-with-matplotlib-and-flask
+matplotlib.use('Agg')  # Force matplotlib to not use an X-Windows backend
 
 ##############################################################################
 # Helpers
@@ -43,7 +41,7 @@ def create_command_profile_node():
     return launch_ros.actions.Node(
         package='velocity_smoother',
         executable='translational_command_profile.py',
-        name="commands",
+        name='commands',
         output='both',
         emulate_tty=True,
         remappings=[
@@ -52,6 +50,7 @@ def create_command_profile_node():
             ('~/odometry', '/odometry'),
         ],
     )
+
 
 def create_velocity_smoother_node():
     # Stage the test so that it's slow on the ramp up, fine on the ramp down
@@ -78,13 +77,13 @@ def create_velocity_smoother_node():
         ],
     )
 
+
 @pytest.mark.rostest
 def generate_test_description():
     # Normally, talker publishes on the 'chatter' topic and listener listens on the
     # 'chatter' topic, but we want to show how to use remappings to munge the data so we
     # will remap these topics when we launch the nodes and insert our own node that can
     # change the data as it passes through
-    path_to_test = os.path.dirname(__file__)
 
     command_profile_node = create_command_profile_node()
     velocity_smoother_node = create_velocity_smoother_node()
@@ -109,6 +108,7 @@ def generate_test_description():
 # These tests will run concurrently with the profiling process.
 # After all these tests are done, the launch system will shut
 # down the processes that it started up
+
 
 class TestCommandProfile(unittest.TestCase):
 
