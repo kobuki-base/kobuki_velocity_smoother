@@ -84,7 +84,6 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
   accel_lim_w_ = accel_w.get<double>();
 
   // Deceleration can be more aggressive, if necessary
-  decel_lim_v_ = decel_factor_ * accel_lim_v_;
   decel_lim_w_ = decel_factor_ * accel_lim_w_;
 
   // Publishers and subscribers
@@ -167,6 +166,8 @@ void VelocitySmoother::robotVelCB(const geometry_msgs::msg::Twist::SharedPtr msg
 
 void VelocitySmoother::timerCB()
 {
+  double decel_lim_v = decel_factor_ * accel_lim_v_;
+
   if ((input_active_ == true) && (cb_avg_time_ > 0.0) &&
     ((this->get_clock()->now() - last_velocity_cb_time_).seconds() >
     std::min(3.0 * cb_avg_time_, 0.5)))
@@ -192,7 +193,7 @@ void VelocitySmoother::timerCB()
   // don't care about min / max velocities here, just for rough checking
   double period_buffer = 2.0;
 
-  double v_deviation_lower_bound = last_cmd_vel_linear_x_ - decel_lim_v_ * period_ * period_buffer;
+  double v_deviation_lower_bound = last_cmd_vel_linear_x_ - decel_lim_v * period_ * period_buffer;
   double v_deviation_upper_bound = last_cmd_vel_linear_x_ + accel_lim_v_ * period_ * period_buffer;
 
   double w_deviation_lower_bound = last_cmd_vel_angular_z_ - decel_lim_w_ * period_ * period_buffer;
@@ -243,9 +244,9 @@ void VelocitySmoother::timerCB()
     if ((feedback_ == ODOMETRY) && (current_vel_.linear.x * target_vel_.linear.x < 0.0)) {
       // countermarch (on robots with significant inertia;
       // requires odometry feedback to be detected)
-      max_v_inc = decel_lim_v_ * period_;
+      max_v_inc = decel_lim_v * period_;
     } else {
-      max_v_inc = ((v_inc * target_vel_.linear.x > 0.0) ? accel_lim_v_ : decel_lim_v_) * period_;
+      max_v_inc = ((v_inc * target_vel_.linear.x > 0.0) ? accel_lim_v_ : decel_lim_v) * period_;
     }
 
     w_inc = target_vel_.angular.z - last_cmd_vel_angular_z_;
@@ -343,7 +344,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
   if (result.successful) {
     // Since these rely on more than one parameter, update at the end in case
     // multiple change at once.
-    decel_lim_v_ = decel_factor_ * accel_lim_v_;
     decel_lim_w_ = decel_factor_ * accel_lim_w_;
   }
 
