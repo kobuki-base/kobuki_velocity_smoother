@@ -42,8 +42,8 @@ import std_msgs.msg
 def create_command_profile_node():
     return launch_ros.actions.Node(
         package='velocity_smoother',
-        node_executable='translational_command_profile.py',
-        node_name="commands",
+        executable='translational_command_profile.py',
+        name="commands",
         output='both',
         emulate_tty=True,
         remappings=[
@@ -66,8 +66,8 @@ def create_velocity_smoother_node():
     parameters['feedback'] = 1  # 1 - ODOMETRY, 2 - COMMANDS (velocity_smoother.hpp)
     return launch_ros.actions.Node(
         package='velocity_smoother',
-        node_executable='velocity_smoother',
-        node_name='velocity_smoother',
+        executable='velocity_smoother',
+        name='velocity_smoother',
         output='both',
         parameters=[parameters],
         remappings=[
