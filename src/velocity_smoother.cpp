@@ -50,7 +50,7 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
 {
   double frequency = this->declare_parameter("frequency", 20.0);
   this->declare_parameter("quiet", false);
-  decel_factor_ = this->declare_parameter("decel_factor", 1.0);
+  this->declare_parameter("decel_factor", 1.0);
   int feedback = this->declare_parameter("feedback", static_cast<int>(NONE));
 
   if ((static_cast<int>(feedback) < NONE) || (static_cast<int>(feedback) > COMMANDS)) {
@@ -163,9 +163,11 @@ void VelocitySmoother::robotVelCB(const geometry_msgs::msg::Twist::SharedPtr msg
 
 void VelocitySmoother::timerCB()
 {
+  double decel_factor = this->get_parameter("decel_factor").as_double();
+
   // Deceleration can be more aggressive, if necessary
-  double decel_lim_v = decel_factor_ * accel_lim_v_;
-  double decel_lim_w = decel_factor_ * accel_lim_w_;
+  double decel_lim_v = decel_factor * accel_lim_v_;
+  double decel_lim_w = decel_factor * accel_lim_w_;
 
   if ((input_active_ == true) && (cb_avg_time_ > 0.0) &&
     ((this->get_clock()->now() - last_velocity_cb_time_).seconds() >
@@ -309,14 +311,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
       result.successful = false;
       result.reason = "frequency cannot be changed on-the-fly";
       break;
-    } else if (parameter.get_name() == "decel_factor") {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
-        result.successful = false;
-        result.reason = "decel_factor must be a double";
-        break;
-      }
-
-      decel_factor_ = parameter.get_value<double>();
     } else if (parameter.get_name() == "feedback") {
       result.successful = false;
       result.reason = "feedback cannot be changed on-the-fly";

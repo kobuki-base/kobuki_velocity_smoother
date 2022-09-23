@@ -65,7 +65,6 @@ private:
   double last_cmd_vel_angular_z_{0.0};
 
   double period_;
-  double decel_factor_;
   bool input_active_;
   double cb_avg_time_;
   rclcpp::Time last_velocity_cb_time_;
