@@ -83,9 +83,6 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
   }
   accel_lim_w_ = accel_w.get<double>();
 
-  // Deceleration can be more aggressive, if necessary
-  decel_lim_w_ = decel_factor_ * accel_lim_w_;
-
   // Publishers and subscribers
   odometry_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
     "~/feedback/odometry", rclcpp::QoS(1),
@@ -166,7 +163,9 @@ void VelocitySmoother::robotVelCB(const geometry_msgs::msg::Twist::SharedPtr msg
 
 void VelocitySmoother::timerCB()
 {
+  // Deceleration can be more aggressive, if necessary
   double decel_lim_v = decel_factor_ * accel_lim_v_;
+  double decel_lim_w = decel_factor_ * accel_lim_w_;
 
   if ((input_active_ == true) && (cb_avg_time_ > 0.0) &&
     ((this->get_clock()->now() - last_velocity_cb_time_).seconds() >
@@ -196,7 +195,7 @@ void VelocitySmoother::timerCB()
   double v_deviation_lower_bound = last_cmd_vel_linear_x_ - decel_lim_v * period_ * period_buffer;
   double v_deviation_upper_bound = last_cmd_vel_linear_x_ + accel_lim_v_ * period_ * period_buffer;
 
-  double w_deviation_lower_bound = last_cmd_vel_angular_z_ - decel_lim_w_ * period_ * period_buffer;
+  double w_deviation_lower_bound = last_cmd_vel_angular_z_ - decel_lim_w * period_ * period_buffer;
   double w_deviation_upper_bound = last_cmd_vel_angular_z_ + accel_lim_w_ * period_ * period_buffer;
 
   // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
@@ -253,9 +252,9 @@ void VelocitySmoother::timerCB()
     if ((feedback_ == ODOMETRY) && (current_vel_.angular.z * target_vel_.angular.z < 0.0)) {
       // countermarch (on robots with significant inertia;
       // requires odometry feedback to be detected)
-      max_w_inc = decel_lim_w_ * period_;
+      max_w_inc = decel_lim_w * period_;
     } else {
-      max_w_inc = ((w_inc * target_vel_.angular.z > 0.0) ? accel_lim_w_ : decel_lim_w_) * period_;
+      max_w_inc = ((w_inc * target_vel_.angular.z > 0.0) ? accel_lim_w_ : decel_lim_w) * period_;
     }
 
     // Calculate and normalise vectors A (desired velocity increment) and B (maximum velocity
@@ -339,12 +338,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
 
       accel_lim_w_ = parameter.get_value<double>();
     }
-  }
-
-  if (result.successful) {
-    // Since these rely on more than one parameter, update at the end in case
-    // multiple change at once.
-    decel_lim_w_ = decel_factor_ * accel_lim_w_;
   }
 
   return result;
