@@ -56,7 +56,6 @@ private:
     COMMANDS
   } feedback_;  /**< What source to use as feedback for smoothed velocity calculations */
 
-  bool quiet_;  /**< Quiet some warnings that are unavoidable because of velocity multiplexing. **/
   double speed_lim_v_, accel_lim_v_, decel_lim_v_;
   double speed_lim_w_, accel_lim_w_, decel_lim_w_;
 
