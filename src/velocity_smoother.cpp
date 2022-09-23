@@ -65,14 +65,7 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
   this->declare_parameter("speed_lim_v", 0.8);
   this->declare_parameter("speed_lim_w", 5.4);
 
-  rclcpp::ParameterValue accel_v = this->declare_parameter(
-    "accel_lim_v",
-    rclcpp::ParameterValue(0.3)
-  );
-  if (accel_v.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
-    throw std::runtime_error("accel_lim_v must be specified as a double");
-  }
-  accel_lim_v_ = accel_v.get<double>();
+  this->declare_parameter("accel_lim_v", 0.3);
 
   rclcpp::ParameterValue accel_w = this->declare_parameter(
     "accel_lim_w",
@@ -164,9 +157,10 @@ void VelocitySmoother::robotVelCB(const geometry_msgs::msg::Twist::SharedPtr msg
 void VelocitySmoother::timerCB()
 {
   double decel_factor = this->get_parameter("decel_factor").as_double();
+  double accel_lim_v = this->get_parameter("accel_lim_v").as_double();
 
   // Deceleration can be more aggressive, if necessary
-  double decel_lim_v = decel_factor * accel_lim_v_;
+  double decel_lim_v = decel_factor * accel_lim_v;
   double decel_lim_w = decel_factor * accel_lim_w_;
 
   if ((input_active_ == true) && (cb_avg_time_ > 0.0) &&
@@ -195,7 +189,7 @@ void VelocitySmoother::timerCB()
   double period_buffer = 2.0;
 
   double v_deviation_lower_bound = last_cmd_vel_linear_x_ - decel_lim_v * period_ * period_buffer;
-  double v_deviation_upper_bound = last_cmd_vel_linear_x_ + accel_lim_v_ * period_ * period_buffer;
+  double v_deviation_upper_bound = last_cmd_vel_linear_x_ + accel_lim_v * period_ * period_buffer;
 
   double w_deviation_lower_bound = last_cmd_vel_angular_z_ - decel_lim_w * period_ * period_buffer;
   double w_deviation_upper_bound = last_cmd_vel_angular_z_ + accel_lim_w_ * period_ * period_buffer;
@@ -247,7 +241,7 @@ void VelocitySmoother::timerCB()
       // requires odometry feedback to be detected)
       max_v_inc = decel_lim_v * period_;
     } else {
-      max_v_inc = ((v_inc * target_vel_.linear.x > 0.0) ? accel_lim_v_ : decel_lim_v) * period_;
+      max_v_inc = ((v_inc * target_vel_.linear.x > 0.0) ? accel_lim_v : decel_lim_v) * period_;
     }
 
     w_inc = target_vel_.angular.z - last_cmd_vel_angular_z_;
@@ -315,14 +309,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
       result.successful = false;
       result.reason = "feedback cannot be changed on-the-fly";
       break;
-    } else if (parameter.get_name() == "accel_lim_v") {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
-        result.successful = false;
-        result.reason = "accel_lim_v must be a double";
-        break;
-      }
-
-      accel_lim_v_ = parameter.get_value<double>();
     } else if (parameter.get_name() == "accel_lim_w") {
       if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
         result.successful = false;
