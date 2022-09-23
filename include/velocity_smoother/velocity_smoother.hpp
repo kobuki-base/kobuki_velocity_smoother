@@ -56,7 +56,6 @@ private:
     COMMANDS
   } feedback_;  /**< What source to use as feedback for smoothed velocity calculations */
 
-  double accel_lim_v_;
   double accel_lim_w_;
 
   geometry_msgs::msg::Twist current_vel_;
