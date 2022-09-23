@@ -49,7 +49,7 @@ VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
   pr_next_(0)
 {
   double frequency = this->declare_parameter("frequency", 20.0);
-  quiet_ = this->declare_parameter("quiet", false);
+  this->declare_parameter("quiet", false);
   decel_factor_ = this->declare_parameter("decel_factor", 1.0);
   int feedback = this->declare_parameter("feedback", static_cast<int>(NONE));
 
@@ -226,7 +226,7 @@ void VelocitySmoother::timerCB()
     // If the publisher has been inactive for a while, or if our current commanding differs a lot
     // from robot velocity feedback, we cannot trust the former; rely on robot's feedback instead
     // This might not work super well using the odometry if it has a high delay
-    if (!quiet_) {
+    if (!this->get_parameter("quiet").as_bool()) {
       // this condition can be unavoidable due to preemption of current velocity control on
       // velocity multiplexer so be quiet if we're instructed to do so
       RCLCPP_WARN(
@@ -322,14 +322,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
       result.successful = false;
       result.reason = "frequency cannot be changed on-the-fly";
       break;
-    } else if (parameter.get_name() == "quiet") {
-      if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
-        result.successful = false;
-        result.reason = "quiet must be a boolean";
-        break;
-      }
-
-      quiet_ = parameter.get_value<bool>();
     } else if (parameter.get_name() == "decel_factor") {
       if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_DOUBLE) {
         result.successful = false;
