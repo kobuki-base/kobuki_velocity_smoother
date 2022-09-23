@@ -30,8 +30,8 @@ def generate_launch_description():
         params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
     velocity_smoother_node = launch_ros.actions.Node(
         package='velocity_smoother',
-        node_executable='velocity_smoother',
-        node_name='velocity_smoother',
+        executable='velocity_smoother',
+        name='velocity_smoother',
         output='both',
         parameters=[params])
 

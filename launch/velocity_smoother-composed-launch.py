@@ -29,15 +29,15 @@ def generate_launch_description():
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)['velocity_smoother']['ros__parameters']
     container = ComposableNodeContainer(
-            node_name='velocity_smoother_container',
-            node_namespace='',
+            name='velocity_smoother_container',
+            namespace='',
             package='rclcpp_components',
-            node_executable='component_container',
+            executable='component_container',
             composable_node_descriptions=[
                 ComposableNode(
                     package='velocity_smoother',
-                    node_plugin='velocity_smoother::VelocitySmoother',
-                    node_name='velocity_smoother',
+                    plugin='velocity_smoother::VelocitySmoother',
+                    name='velocity_smoother',
                     parameters=[params]),
             ],
             output='both',
