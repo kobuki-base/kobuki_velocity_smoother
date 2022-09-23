@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2020 Open Source Robotics Foundation, Inc.
-# 
+#
 # Software License Agreement (BSD License 2.0)
 #   https://raw.githubusercontent.com/kobuki-base/velocity_smoother/license/LICENSE
 

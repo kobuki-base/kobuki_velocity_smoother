@@ -10,34 +10,36 @@
 # Imports
 ##############################################################################
 
-import enum
-
-import rclpy
-import rclpy.executors
-
 import geometry_msgs.msg as geometry_msgs
 import nav_msgs.msg as nav_msgs
+import rclpy
+import rclpy.executors
 
 ##############################################################################
 # Helpers
 ##############################################################################
 
+
 def banner(msg):
-    print("\n" + 80 * "*")
-    print("* " + msg.center(80))
-    print(80 * "*" + "\n")
+    print('\n' + 80 * '*')
+    print('* ' + msg.center(80))
+    print(80 * '*' + '\n')
 
 ##############################################################################
 # Classes
 ##############################################################################
 
+
 class Parameters(object):
+
     def __init__(self):
         self.velocity_maximum = 0.50
         self.ramp_increment = 0.02
         self.ramp_decrement = 0.02
 
+
 class CommandProfile(object):
+
     def __init__(self):
         self.cmd_vel, self.odom = self.initialise_messages()
         self.generator = self.generate_profile()
@@ -86,7 +88,6 @@ class CommandProfile(object):
             yield x_vel
             count += 1
 
-
     @staticmethod
     def initialise_messages():
         cmd_vel = geometry_msgs.Twist()
@@ -97,7 +98,7 @@ class CommandProfile(object):
         cmd_vel.angular.y = 0.0
         cmd_vel.angular.z = 0.0
         odom = nav_msgs.Odometry()
-        odom.header.frame_id = "base_link"
+        odom.header.frame_id = 'base_link'
         odom.pose.pose.position.x = 0.0
         odom.pose.pose.position.y = 0.0
         odom.pose.pose.position.z = 0.0
@@ -105,8 +106,8 @@ class CommandProfile(object):
         odom.pose.pose.orientation.y = 0.0
         odom.pose.pose.orientation.z = 0.0
         odom.pose.pose.orientation.w = 1.0
-        odom.pose.covariance[0]  = 0.1
-        odom.pose.covariance[7]  = 0.1
+        odom.pose.covariance[0] = 0.1
+        odom.pose.covariance[7] = 0.1
         odom.pose.covariance[35] = 0.2
         odom.pose.covariance[14] = 10.0
         odom.pose.covariance[21] = 10.0
@@ -119,7 +120,9 @@ class CommandProfile(object):
         odom.twist.twist.angular.z = 0.0
         return cmd_vel, odom
 
+
 class ExecutionEngine(object):
+
     def __init__(self, node_name):
         self.stopped = False
         self.command = CommandProfile()
@@ -127,7 +130,7 @@ class ExecutionEngine(object):
         self.node = rclpy.create_node(node_name)
         self.cmd_vel_publisher = self.node.create_publisher(
             msg_type=geometry_msgs.Twist,
-            topic="~/generated/cmd_vel",
+            topic='~/generated/cmd_vel',
             qos_profile=10,
         )
         self.timer = self.node.create_timer(
@@ -144,12 +147,14 @@ class ExecutionEngine(object):
         )
         self.odom_publisher = self.node.create_publisher(
             msg_type=nav_msgs.Odometry,
-            topic="~/odometry",
+            topic='~/odometry',
             qos_profile=10,
         )
 
     def update_and_publish_odometry(self, msg):
         """
+        Update and publish odometry.
+
         Tune into the actual commanded velocity (i.e. after the smoother) and
         update the odometry accordingly.
         """
@@ -160,11 +165,11 @@ class ExecutionEngine(object):
     def update_and_publish_command(self):
         try:
             commanded_velocity = next(self.command.generator)
-            print("Publishing .... [{:0.2f}]".format(commanded_velocity))
+            print('Publishing .... [{:0.2f}]'.format(commanded_velocity))
             self.command.cmd_vel.linear.x = commanded_velocity
             self.cmd_vel_publisher.publish(self.command.cmd_vel)
         except StopIteration:
-            print("PROFILE_SENT")
+            print('PROFILE_SENT')
             self.timer.cancel()
             self.stopped = True
 
@@ -179,11 +184,11 @@ class ExecutionEngine(object):
 ##############################################################################
 
 
-if __name__== "__main__":
-    banner("Command Profile")
+if __name__ == '__main__':
+    banner('Command Profile')
     rclpy.init()
 
-    engine = ExecutionEngine(node_name="commands")
+    engine = ExecutionEngine(node_name='commands')
 
     executor = rclpy.executors.SingleThreadedExecutor()
     executor.add_node(engine.node)
