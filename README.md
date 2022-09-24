@@ -4,11 +4,9 @@
 
 ## About
 
-ROS2 package for smoothing commanded velocities represented by a stream of
-`geometry_msg/Twist` messages. It applies limits to linear and angular
-components of both speed and acceleration. Feedback from either
-the odometry / actual commanded velocity can be used to provide
-a better result in some situations (read further below).
+ROS 2 package for smoothing commanded velocities represented by a stream of `geometry_msg/msg/Twist` messages.
+It applies limits to linear and angular components of both speed and acceleration.
+Feedback from either the odometry / actual commanded velocity can be used to provide a better result in some situations (read further below).
 
 ![Profiles](test/translational_smoothing_profiles.png)
 
@@ -26,27 +24,26 @@ a better result in some situations (read further below).
 
 Subscriptions
 
-* **~/input** (`geometry_msgs/Twist`): input velocity commands
-* **~/feedback/odometry** (`nav_msgs/Odometry`): topic for odometry feedback, only required if the requested feedback has been set for odometry
-* **~/feedback/cmd_vel** (`geometry_msgs/Twist`): topic for actual commanded velocity feedback, only required if the requested feedback has been set for actual commanded velocities
+* **~/input** (`geometry_msgs/msg/Twist`): input velocity commands
+* **~/feedback/odometry** (`nav_msgs/msg/Odometry`): topic for odometry feedback, only required if the requested feedback has been set for odometry
+* **~/feedback/cmd_vel** (`geometry_msgs/msg/Twist`): topic for actual commanded velocity feedback, only required if the requested feedback has been set for actual commanded velocities
 
 Publications
 
-* **~smoothed** (`geometry_msgs/Twist`): smoothed output velocity commands respecting velocity and acceleration limits
+* **~smoothed** (`geometry_msgs/msg/Twist`): smoothed output velocity commands respecting velocity and acceleration limits
 
 ## Usage
 
-* All the parameters except frequency are dynamically reconfigurable.
-* Linear and angular velocities are smoothed proportionally to the more restricted, so we guaranty a constant rotation radius.
-* If the input topic gets inactive, and the last command is not a zero-velocity one, (maybe the controller crashed, or just forgot good manners...), we introduce a fake zero-velocity command after a sort timeout.
+* All the parameters except frequency and feedback are dynamically reconfigurable.
+* Linear and angular velocities are smoothed proportionally to be more restricted, so we guarantee a constant rotation radius.
+* If the input topic becomes inactive, and the last command is not a zero-velocity one (maybe the controller crashed, or just forgot good manners...), we introduce a fake zero-velocity command after a short timeout.
 
-Simply wire up the channels to their appropriate topics. The tests can be a useful starting point.
+Simply wire up the channels to their appropriate topics.
+The tests can be a useful starting point.
 
 ## Feedback
 
 There are some reasons to use robot feedback. The two most frequently faced:
 
-* Multiple controllers compete for controlling the robot via a multiplexer. A controller that has been excluded by another with higher priority may suddenly issue commands significantly different to the
-last commanded velocity when the multiplexer has switched back to it. i.e. the commanded velocity
-profile experiences a large, discrete jump. In these cases, option 2 is very useful. 
+* Multiple controllers compete for controlling the robot via a multiplexer. A controller that has been excluded by another with higher priority may suddenly issue commands significantly different to the last commanded velocity when the multiplexer has switched back to it. i.e. the commanded velocity profile experiences a large, discrete jump. In these cases, option 2 is very useful.
 * The robot fails to generate the commanded velocity due to, for example, unmodelled inclines, carpets etc. In these cases, option 1 is very useful.
