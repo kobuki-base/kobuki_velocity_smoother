@@ -10,18 +10,14 @@
  ** Ifdefs
  *****************************************************************************/
 
-#include <cstdio>
 #include <memory>
 
-#include <rclcpp/rclcpp.hpp>
+#include "rclcpp/rclcpp.hpp"
 
 #include "velocity_smoother/velocity_smoother.hpp"
 
 int main(int argc, char ** argv)
 {
-  // Force flush of the stdout buffer.
-  setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
-
   rclcpp::init(argc, argv);
 
   rclcpp::spin(std::make_shared<velocity_smoother::VelocitySmoother>(rclcpp::NodeOptions()));
