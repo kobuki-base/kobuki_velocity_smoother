@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(velocity_smoother)
+project(kobuki_velocity_smoother)
 
 find_package(ament_cmake_ros REQUIRED)
 find_package(ecl_build REQUIRED)
@@ -31,7 +31,7 @@ target_link_libraries(velocity_smoother_node ${PROJECT_NAME})
 set_target_properties(velocity_smoother_node PROPERTIES OUTPUT_NAME velocity_smoother)
 
 rclcpp_components_register_nodes(${PROJECT_NAME}
-  "velocity_smoother::VelocitySmoother")
+  "kobuki_velocity_smoother::VelocitySmoother")
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib

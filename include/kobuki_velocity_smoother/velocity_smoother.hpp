@@ -10,8 +10,8 @@
  ** Ifdefs
  *****************************************************************************/
 
-#ifndef VELOCITY_SMOOTHER__VELOCITY_SMOOTHER_HPP_
-#define VELOCITY_SMOOTHER__VELOCITY_SMOOTHER_HPP_
+#ifndef KOBUKI_VELOCITY_SMOOTHER__VELOCITY_SMOOTHER_HPP_
+#define KOBUKI_VELOCITY_SMOOTHER__VELOCITY_SMOOTHER_HPP_
 
 /*****************************************************************************
  ** Includes
@@ -29,7 +29,7 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace velocity_smoother
+namespace kobuki_velocity_smoother
 {
 
 /*****************************************************************************
@@ -98,6 +98,6 @@ private:
   }
 };
 
-}  // namespace velocity_smoother
+}  // namespace kobuki_velocity_smoother
 
-#endif  // VELOCITY_SMOOTHER__VELOCITY_SMOOTHER_HPP_
+#endif  // KOBUKI_VELOCITY_SMOOTHER__VELOCITY_SMOOTHER_HPP_

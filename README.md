@@ -1,4 +1,4 @@
-# Velocity Smoother
+# Kobuki Velocity Smoother
 
 [[About](#about)][[Parameters](#parameters)][[Topics](#topics)][[Usage](#usage)][[Feedback](#feedback)]
 

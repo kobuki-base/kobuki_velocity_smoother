@@ -3,7 +3,7 @@
 # Copyright (c) 2020 Daniel Stonier
 #
 # License: BSD
-#   https://raw.githubusercontent.com/kobuki-base/velocity_smoother/license/LICENSE
+#   https://raw.githubusercontent.com/kobuki-base/kobuki_velocity_smoother/license/LICENSE
 #
 ##############################################################################
 # Imports
@@ -67,9 +67,9 @@ def create_velocity_smoother_node():
     parameters['decel_factor'] = 2.0
     parameters['feedback'] = 1  # 1 - ODOMETRY, 2 - COMMANDS (velocity_smoother.hpp)
     return launch_ros.actions.Node(
-        package='velocity_smoother',
+        package='kobuki_velocity_smoother',
         executable='velocity_smoother',
-        name='velocity_smoother',
+        name='kobuki_velocity_smoother',
         output='both',
         parameters=[parameters],
         remappings=[

@@ -1,7 +1,7 @@
 # Example configuration:
 # - velocity limits are around a 10% above the physical limits
 # - acceleration limits are just low enough to avoid jerking
-velocity_smoother:
+kobuki_velocity_smoother:
   ros__parameters:
     # limits
     speed_lim_v: 0.8

@@ -3,7 +3,7 @@
 # Copyright (c) 2020 Daniel Stonier
 #
 # License: BSD
-#   https://raw.githubusercontent.com/kobuki-base/velocity_smoother/license/LICENSE
+#   https://raw.githubusercontent.com/kobuki-base/kobuki_velocity_smoother/license/LICENSE
 #
 ##############################################################################
 # Imports
