@@ -14,13 +14,13 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "velocity_smoother/velocity_smoother.hpp"
+#include "kobuki_velocity_smoother/velocity_smoother.hpp"
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
-  rclcpp::spin(std::make_shared<velocity_smoother::VelocitySmoother>(rclcpp::NodeOptions()));
+  rclcpp::spin(std::make_shared<kobuki_velocity_smoother::VelocitySmoother>(rclcpp::NodeOptions()));
 
   rclcpp::shutdown();
 

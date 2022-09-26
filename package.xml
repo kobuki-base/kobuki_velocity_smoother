@@ -1,5 +1,5 @@
 <package format="2">
-  <name>velocity_smoother</name>
+  <name>kobuki_velocity_smoother</name>
   <version>0.14.0</version>
   <description>
      Bound incoming velocity messages according to robot velocity and acceleration limits.
@@ -7,9 +7,9 @@
   <author>Jorge Santos Simon</author>
   <maintainer email="jihoonl@yujinrobot.com">Jihoon Lee</maintainer>
   <license>BSD</license>
-  <url type="website">https://index.ros.org/p/velocity_smoother/github-kobuki-base-velocity_smoother/</url>
-  <url type="repository">https://github.com/kobuki-base/velocity_smoother</url>
-  <url type="bugtracker">https://github.com/kobuki-base/velocity_smoother/issues</url>
+  <url type="website">https://index.ros.org/p/kobuki_velocity_smoother/github-kobuki-base-velocity_smoother/</url>
+  <url type="repository">https://github.com/kobuki-base/kobuki_velocity_smoother</url>
+  <url type="bugtracker">https://github.com/kobuki-base/kobuki_velocity_smoother/issues</url>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 

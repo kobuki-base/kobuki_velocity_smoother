@@ -26,7 +26,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 
-#include "velocity_smoother/velocity_smoother.hpp"
+#include "kobuki_velocity_smoother/velocity_smoother.hpp"
 
 /*****************************************************************************
  ** Preprocessing
@@ -38,7 +38,7 @@
 ** Namespaces
 *****************************************************************************/
 
-namespace velocity_smoother
+namespace kobuki_velocity_smoother
 {
 
 /*********************
@@ -46,7 +46,7 @@ namespace velocity_smoother
 **********************/
 
 VelocitySmoother::VelocitySmoother(const rclcpp::NodeOptions & options)
-: rclcpp::Node("velocity_smoother", options),
+: rclcpp::Node("kobuki_velocity_smoother", options),
   input_active_(false),
   last_velocity_cb_time_(this->get_clock()->now()),
   pr_next_(0)
@@ -311,6 +311,6 @@ rcl_interfaces::msg::SetParametersResult VelocitySmoother::parameterUpdate(
   return result;
 }
 
-}  // namespace velocity_smoother
+}  // namespace kobuki_velocity_smoother
 
-RCLCPP_COMPONENTS_REGISTER_NODE(velocity_smoother::VelocitySmoother)
+RCLCPP_COMPONENTS_REGISTER_NODE(kobuki_velocity_smoother::VelocitySmoother)
