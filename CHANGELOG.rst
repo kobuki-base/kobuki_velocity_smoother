@@ -1,9 +1,30 @@
-=================
-Velocity Smoother
-=================
+========================
+Kobuki Velocity Smoother
+========================
 
 Forthcoming
 -----------
+
+0.15.0 (2022-10-01)
+-------------------
+* Rename the package to kobuki_velocity_smoother. (`#20 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/20>`_)
+* Make a few more style fixes for older cpplint. (`#18 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/18>`_)
+* Update the README.md (`#17 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/17>`_)
+* Don't install test artifacts. (`#16 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/16>`_)
+* Minor cleanup of the includes.
+* Remove the internal accel_lim_w variable.
+* Remove internal accel_lim_v.
+* Remove decel_factor internal variable.
+* Remove internal decel_lim_w variable.
+* Remove internal decel_lim_v variable.
+* Remove speed_lim_w internal variable.
+* Remove speed_lim_v internal variable.
+* Remove the quiet internal variable.
+* Make sure to allow other parameters in the list.
+* Enable the style checkers, and fix the style to conform. (`#14 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/14>`_)
+* Fix the tests to work with modern ROS 2. (`#13 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/13>`_)
+* Small fix to the velocity smoother. (`#12 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/12>`_)
+* Fix the test so it works with 'colcon test' (`#11 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/11>`_)
 
 0.14.0 (2020-01-20)
 -------------------
