@@ -21,7 +21,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   ${rcl_interfaces_TARGETS}
   rclcpp::rclcpp
   rclcpp_components::component
-  rclcpp_components::component_manager
 )
 
 add_executable(velocity_smoother_node src/velocity_smoother_node.cpp)
