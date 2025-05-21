@@ -15,19 +15,19 @@ ecl_enable_cxx_warnings()
 include_directories(include)
 
 add_library(${PROJECT_NAME} SHARED src/velocity_smoother.cpp)
-ament_target_dependencies(${PROJECT_NAME}
-  "geometry_msgs"
-  "nav_msgs"
-  "rcl_interfaces"
-  "rclcpp"
-  "rclcpp_components"
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${rcl_interfaces_TARGETS}
+  rclcpp::rclcpp
+  rclcpp_components::component
 )
 
 add_executable(velocity_smoother_node src/velocity_smoother_node.cpp)
-ament_target_dependencies(velocity_smoother_node
-  "rclcpp"
+target_link_libraries(velocity_smoother_node PUBLIC
+  ${PROJECT_NAME}
+  rclcpp::rclcpp
 )
-target_link_libraries(velocity_smoother_node ${PROJECT_NAME})
 set_target_properties(velocity_smoother_node PROPERTIES OUTPUT_NAME velocity_smoother)
 
 rclcpp_components_register_nodes(${PROJECT_NAME}
