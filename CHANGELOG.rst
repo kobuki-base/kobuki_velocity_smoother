@@ -2,8 +2,8 @@
 Kobuki Velocity Smoother
 ========================
 
-Forthcoming
------------
+0.15.1 (2026-02-24)
+-------------------
 * [kilted] Update deprecated call to ament_target_dependencies (`#21 <https://github.com/kobuki-base/kobuki_velocity_smoother/issues/21>`_)
 * Contributors: David V. Lu!!
 
